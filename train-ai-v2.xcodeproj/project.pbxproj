@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3AE32DAA2F4EEC4800D0BFE3 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE32DA92F4EEC4800D0BFE3 /* ChatView.swift */; };
+		3AE32DAC2F4EEC5000D0BFE3 /* SideMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE32DAB2F4EEC5000D0BFE3 /* SideMenuView.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3AE32D632F4E539100D0BFE3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +32,8 @@
 		3AE32D532F4E538F00D0BFE3 /* train-ai-v2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "train-ai-v2.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AE32D622F4E539100D0BFE3 /* train-ai-v2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "train-ai-v2Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AE32D6C2F4E539100D0BFE3 /* train-ai-v2UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "train-ai-v2UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3AE32DA92F4EEC4800D0BFE3 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		3AE32DAB2F4EEC5000D0BFE3 /* SideMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideMenuView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +86,8 @@
 				3AE32D652F4E539100D0BFE3 /* train-ai-v2Tests */,
 				3AE32D6F2F4E539100D0BFE3 /* train-ai-v2UITests */,
 				3AE32D542F4E538F00D0BFE3 /* Products */,
+				3AE32DA92F4EEC4800D0BFE3 /* ChatView.swift */,
+				3AE32DAB2F4EEC5000D0BFE3 /* SideMenuView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -236,6 +245,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3AE32DAA2F4EEC4800D0BFE3 /* ChatView.swift in Sources */,
+				3AE32DAC2F4EEC5000D0BFE3 /* SideMenuView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
