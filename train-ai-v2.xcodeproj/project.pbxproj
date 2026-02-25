@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		3AE32DAA2F4EEC4800D0BFE3 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE32DA92F4EEC4800D0BFE3 /* ChatView.swift */; };
 		3AE32DAC2F4EEC5000D0BFE3 /* SideMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE32DAB2F4EEC5000D0BFE3 /* SideMenuView.swift */; };
+		AA11111100000000AA000001 /* AIModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11111100000000BB000001 /* AIModel.swift */; };
+		AA11111100000000AA000002 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11111100000000BB000002 /* ChatMessage.swift */; };
+		AA11111100000000AA000003 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11111100000000BB000003 /* KeychainHelper.swift */; };
+		AA11111100000000AA000004 /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11111100000000BB000004 /* ChatService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,6 +38,10 @@
 		3AE32D6C2F4E539100D0BFE3 /* train-ai-v2UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "train-ai-v2UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AE32DA92F4EEC4800D0BFE3 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		3AE32DAB2F4EEC5000D0BFE3 /* SideMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideMenuView.swift; sourceTree = "<group>"; };
+		BB11111100000000BB000001 /* AIModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIModel.swift; sourceTree = "<group>"; };
+		BB11111100000000BB000002 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		BB11111100000000BB000003 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		BB11111100000000BB000004 /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -88,6 +96,10 @@
 				3AE32D542F4E538F00D0BFE3 /* Products */,
 				3AE32DA92F4EEC4800D0BFE3 /* ChatView.swift */,
 				3AE32DAB2F4EEC5000D0BFE3 /* SideMenuView.swift */,
+				BB11111100000000BB000001 /* AIModel.swift */,
+				BB11111100000000BB000002 /* ChatMessage.swift */,
+				BB11111100000000BB000003 /* KeychainHelper.swift */,
+				BB11111100000000BB000004 /* ChatService.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -247,6 +259,10 @@
 			files = (
 				3AE32DAA2F4EEC4800D0BFE3 /* ChatView.swift in Sources */,
 				3AE32DAC2F4EEC5000D0BFE3 /* SideMenuView.swift in Sources */,
+				AA11111100000000AA000001 /* AIModel.swift in Sources */,
+				AA11111100000000AA000002 /* ChatMessage.swift in Sources */,
+				AA11111100000000AA000003 /* KeychainHelper.swift in Sources */,
+				AA11111100000000AA000004 /* ChatService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

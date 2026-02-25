@@ -11,14 +11,15 @@ struct ChatView: View {
     @State private var messageText = ""
     @State private var isSideMenuOpen = false
     @State private var textEditorHeight: CGFloat = 40
-    
+    @State private var chatService = ChatService()
+
     var body: some View {
         ZStack(alignment: .leading) {
             // Main Chat View
             mainChatView
                 .offset(x: isSideMenuOpen ? 270 : 0)
                 .animation(.easeInOut(duration: 0.3), value: isSideMenuOpen)
-            
+
             // Side Menu
             if isSideMenuOpen {
                 SideMenuView(isOpen: $isSideMenuOpen)
@@ -28,7 +29,7 @@ struct ChatView: View {
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
     }
-    
+
     private var mainChatView: some View {
         ZStack {
             // Gradient Background
@@ -41,18 +42,43 @@ struct ChatView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
-            
+
             VStack(spacing: 0) {
                 // Top Navigation Bar
                 topNavigationBar
-                
-                Spacer()
-                
-                // Center Welcome Content
-                welcomeContent
-                
-                Spacer()
-                
+
+                // Message area or welcome screen
+                if chatService.messages.isEmpty {
+                    Spacer()
+                    welcomeContent
+                    Spacer()
+                } else {
+                    messageListView
+                }
+
+                // Loading / error indicators
+                if chatService.isLoading {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Claude is thinking...")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                if let error = chatService.errorMessage {
+                    Text(error)
+                        .font(.system(size: 13))
+                        .foregroundColor(.red)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
                 // Bottom Input Container
                 bottomInputContainer
             }
@@ -61,7 +87,29 @@ struct ChatView: View {
             hideKeyboard()
         }
     }
-    
+
+    private var messageListView: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(chatService.messages) { message in
+                        MessageBubble(message: message)
+                            .id(message.id)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+            .onChange(of: chatService.messages.count) {
+                if let last = chatService.messages.last {
+                    withAnimation {
+                        proxy.scrollTo(last.id, anchor: .bottom)
+                    }
+                }
+            }
+        }
+    }
+
     private var topNavigationBar: some View {
         HStack {
             // Hamburger Menu Button
@@ -80,9 +128,9 @@ struct ChatView: View {
                             .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
                     )
             }
-            
+
             Spacer()
-            
+
             // Profile Icon
             Circle()
                 .fill(Color.white)
@@ -98,14 +146,14 @@ struct ChatView: View {
         .padding(.top, 12)
         .padding(.bottom, 8)
     }
-    
+
     private var welcomeContent: some View {
         VStack(spacing: 20) {
             // Green Leaf Icon
             Image(systemName: "leaf.fill")
                 .font(.system(size: 50))
                 .foregroundColor(.green)
-            
+
             // Welcome Text
             Text("How can I help you\nthis evening?")
                 .font(.system(size: 32, weight: .regular, design: .serif))
@@ -115,7 +163,7 @@ struct ChatView: View {
         }
         .padding(.bottom, 60)
     }
-    
+
     private var bottomInputContainer: some View {
         VStack(spacing: 0) {
             // White Container Background
@@ -144,7 +192,7 @@ struct ChatView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
-                
+
                 // Bottom Row: Buttons
                 HStack(spacing: 0) {
                     // Plus Button (Attach)
@@ -157,9 +205,9 @@ struct ChatView: View {
                             .frame(width: 44, height: 44)
                     }
                     .padding(.leading, 12)
-                    
+
                     Spacer()
-                    
+
                     // Microphone Button
                     Button(action: {
                         // Microphone action
@@ -169,7 +217,7 @@ struct ChatView: View {
                             .foregroundColor(.primary.opacity(0.6))
                             .frame(width: 44, height: 44)
                     }
-                    
+
                     // Send Button (Up Arrow) - Black Circle
                     Button(action: {
                         sendMessage()
@@ -180,9 +228,10 @@ struct ChatView: View {
                             .frame(width: 38, height: 38)
                             .background(
                                 Circle()
-                                    .fill(Color.black)
+                                    .fill(chatService.isLoading ? Color.gray : Color.black)
                             )
                     }
+                    .disabled(chatService.isLoading)
                     .padding(.trailing, 12)
                 }
                 .padding(.bottom, 12)
@@ -200,7 +249,7 @@ struct ChatView: View {
                 .ignoresSafeArea(edges: .bottom)
         )
     }
-    
+
     private func updateTextEditorHeight() {
         let size = CGSize(width: UIScreen.main.bounds.width - 160, height: .infinity)
         let estimatedSize = NSString(string: messageText).boundingRect(
@@ -209,23 +258,48 @@ struct ChatView: View {
             attributes: [.font: UIFont.systemFont(ofSize: 17)],
             context: nil
         )
-        
+
         textEditorHeight = max(40, min(estimatedSize.height + 20, 120))
     }
-    
+
     private func sendMessage() {
-        guard !messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        
-        // Handle send message
-        print("Sending message: \(messageText)")
-        
-        // Clear the message
+        let trimmed = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        chatService.send(userText: trimmed)
         messageText = ""
         textEditorHeight = 40
+        hideKeyboard()
     }
-    
+
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+// MARK: - MessageBubble
+
+struct MessageBubble: View {
+    let message: ChatMessage
+
+    private var isUser: Bool { message.role == "user" }
+
+    var body: some View {
+        HStack {
+            if isUser { Spacer(minLength: 60) }
+
+            Text(message.content)
+                .font(.system(size: 16))
+                .foregroundColor(isUser ? .white : .primary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(isUser ? Color.black : Color.white)
+                        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+                )
+
+            if !isUser { Spacer(minLength: 60) }
+        }
     }
 }
 
