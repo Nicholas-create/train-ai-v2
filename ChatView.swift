@@ -18,17 +18,18 @@ struct ChatView: View {
         ZStack(alignment: .leading) {
             // Main Chat View
             mainChatView
-                .offset(x: isSideMenuOpen ? 270 : 0)
-                .animation(.easeInOut(duration: 0.3), value: isSideMenuOpen)
-
+                .offset(x: isSideMenuOpen ? 320 : 0)
+                .zIndex(2)
             // Side Menu
             if isSideMenuOpen {
                 SideMenuView(isOpen: $isSideMenuOpen)
-                    .transition(.move(edge: .leading))
+                    .transition(.identity)
                     .zIndex(1)
             }
         }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .animation(.interactiveSpring(response: 0.2, dampingFraction: 1.0, blendDuration: 0), value: isSideMenuOpen)
+        
+        // .ignoresSafeArea(.keyboard, edges: .bottom) - Deleted so message input box keeps appearing above keyboard
     }
 
     private var mainChatView: some View {
@@ -36,8 +37,8 @@ struct ChatView: View {
             // Gradient Background
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color(red: 0.96, green: 0.94, blue: 0.92),
-                    Color(red: 0.97, green: 0.95, blue: 0.93)
+                    AppTheme.background,
+                    AppTheme.backgroundGradientEnd
                 ]),
                 startPoint: .top,
                 endPoint: .bottom
@@ -64,7 +65,7 @@ struct ChatView: View {
                             .scaleEffect(0.8)
                         Text("Claude is thinking...")
                             .font(.system(size: 14))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(AppTheme.secondaryText)
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 8)
@@ -74,7 +75,7 @@ struct ChatView: View {
                 if let error = chatService.errorMessage {
                     Text(error)
                         .font(.system(size: 13))
-                        .foregroundColor(.red)
+                        .foregroundColor(AppTheme.errorText)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 6)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -121,12 +122,12 @@ struct ChatView: View {
             }) {
                 Image(systemName: "line.3.horizontal")
                     .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.primary)
+                    .foregroundColor(AppTheme.primaryText)
                     .frame(width: 50, height: 50)
                     .background(
                         Circle()
-                            .fill(Color.white)
-                            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+                            .fill(AppTheme.surface)
+                            .shadow(color: AppTheme.shadowLight, radius: 8, x: 0, y: 2)
                     )
             }
 
@@ -134,13 +135,13 @@ struct ChatView: View {
 
             // Profile Icon
             Circle()
-                .fill(Color.white)
+                .fill(AppTheme.surface)
                 .frame(width: 50, height: 50)
-                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+                .shadow(color: AppTheme.shadowLight, radius: 8, x: 0, y: 2)
                 .overlay(
                     Text("F")
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.primary)
+                        .foregroundColor(AppTheme.primaryText)
                 )
         }
         .padding(.horizontal, 20)
@@ -151,15 +152,15 @@ struct ChatView: View {
     private var welcomeContent: some View {
         VStack(spacing: 20) {
             // Green Leaf Icon
-            Image(systemName: "leaf.fill")
+            Image(systemName: "leaf")
                 .font(.system(size: 50))
-                .foregroundColor(.green)
+                .foregroundColor(AppTheme.accent)
 
             // Welcome Text
-            Text("How can I help you\nthis evening?")
+            Text("How can I help you\ntoday?")
                 .font(.system(size: 32, weight: .regular, design: .serif))
                 .multilineTextAlignment(.center)
-                .foregroundColor(.primary.opacity(0.85))
+                .foregroundColor(AppTheme.headlineText)
                 .lineSpacing(4)
         }
         .padding(.bottom, 60)
@@ -187,13 +188,13 @@ struct ChatView: View {
                         .overlay(
                             Group {
                                 if messageText.isEmpty {
-                                    Text("Chat with Personal AI")
-                                        .foregroundColor(.gray.opacity(0.5))
+                                    Text(" Chat with Personal AI")
+                                        .foregroundColor(AppTheme.placeholderText)
                                         .font(.system(size: 17))
                                         .allowsHitTesting(false)
                                 }
                             },
-                            alignment: .topLeading
+                            alignment: .leading
                         )
                 }
                 .padding(.horizontal, 20)
@@ -204,10 +205,13 @@ struct ChatView: View {
                     // Plus Button (Attach)
                     Button(action: {
                         // Attach action
+                        
+                        
+                        
                     }) {
                         Image(systemName: "plus")
                             .font(.system(size: 24, weight: .medium))
-                            .foregroundColor(.primary.opacity(0.6))
+                            .foregroundColor(AppTheme.subtleText)
                             .frame(width: 44, height: 44)
                     }
                     .padding(.leading, 12)
@@ -217,10 +221,13 @@ struct ChatView: View {
                     // Microphone Button
                     Button(action: {
                         // Microphone action
+                        
+                        
+                        
                     }) {
                         Image(systemName: "mic.fill")
                             .font(.system(size: 22, weight: .regular))
-                            .foregroundColor(.primary.opacity(0.6))
+                            .foregroundColor(AppTheme.subtleText)
                             .frame(width: 44, height: 44)
                     }
 
@@ -230,11 +237,11 @@ struct ChatView: View {
                     }) {
                         Image(systemName: "arrow.up")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(AppTheme.sendButtonIcon)
                             .frame(width: 38, height: 38)
                             .background(
                                 Circle()
-                                    .fill(chatService.isLoading ? Color.gray : Color.black)
+                                    .fill(chatService.isLoading ? AppTheme.sendButtonDisabled : AppTheme.sendButton)
                             )
                     }
                     .disabled(chatService.isLoading)
@@ -244,14 +251,14 @@ struct ChatView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 28)
-                    .fill(Color.white)
-                    .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: -2)
+                    .fill(AppTheme.surface)
+                    .shadow(color: AppTheme.shadowLight, radius: 12, x: 0, y: -2)
             )
             .padding(.horizontal, 16)
             .padding(.bottom, 8)
         }
         .background(
-            Color(red: 0.96, green: 0.94, blue: 0.92)
+            AppTheme.background
                 .ignoresSafeArea(edges: .bottom)
         )
     }
@@ -295,13 +302,13 @@ struct MessageBubble: View {
 
             Text(message.content)
                 .font(.system(size: 16))
-                .foregroundColor(isUser ? .white : .primary)
+                .foregroundColor(isUser ? AppTheme.userBubbleText : AppTheme.aiBubbleText)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 18)
-                        .fill(isUser ? Color.black : Color.white)
-                        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+                        .fill(isUser ? AppTheme.userBubble : AppTheme.aiBubble)
+                        .shadow(color: AppTheme.shadowSubtle, radius: 4, x: 0, y: 2)
                 )
 
             if !isUser { Spacer(minLength: 60) }
