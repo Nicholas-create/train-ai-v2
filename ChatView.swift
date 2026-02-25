@@ -12,6 +12,7 @@ struct ChatView: View {
     @State private var isSideMenuOpen = false
     @State private var textEditorHeight: CGFloat = 40
     @State private var chatService = ChatService()
+    @State private var containerWidth: CGFloat = 390
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -166,6 +167,11 @@ struct ChatView: View {
 
     private var bottomInputContainer: some View {
         VStack(spacing: 0) {
+            Color.clear.frame(height: 0)
+                .background(GeometryReader { geo in
+                    Color.clear.onAppear { containerWidth = geo.size.width }
+                        .onChange(of: geo.size.width) { _, w in containerWidth = w }
+                })
             // White Container Background
             VStack(spacing: 12) {
                 // Top Row: Text Input Field
@@ -251,7 +257,7 @@ struct ChatView: View {
     }
 
     private func updateTextEditorHeight() {
-        let size = CGSize(width: UIScreen.main.bounds.width - 160, height: .infinity)
+        let size = CGSize(width: containerWidth - 160, height: .infinity)
         let estimatedSize = NSString(string: messageText).boundingRect(
             with: size,
             options: .usesLineFragmentOrigin,
