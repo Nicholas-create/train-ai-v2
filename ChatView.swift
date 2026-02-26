@@ -114,39 +114,34 @@ struct ChatView: View {
 
     private var topNavigationBar: some View {
         HStack {
-            // Hamburger Menu Button
-            Button(action: {
-                withAnimation {
-                    isSideMenuOpen.toggle()
-                }
-            }) {
-                Image(systemName: "line.3.horizontal")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(AppTheme.primaryText)
+            // Sidebar Button
+            Button {
+                withAnimation { isSideMenuOpen.toggle() }
+            } label: {
+                Image(systemName: "sidebar.left")
+                    .font(.system(size: 22, weight: .medium))
                     .frame(width: 50, height: 50)
-                    .background(
-                        Circle()
-                            .fill(AppTheme.surface)
-                            .shadow(color: AppTheme.shadowLight, radius: 8, x: 0, y: 2)
-                    )
             }
+            .buttonStyle(.plain)
+            .glassEffect(.regular.interactive(), in: .circle)
 
             Spacer()
 
-            // Profile Icon
-            Circle()
-                .fill(AppTheme.surface)
-                .frame(width: 50, height: 50)
-                .shadow(color: AppTheme.shadowLight, radius: 8, x: 0, y: 2)
-                .overlay(
-                    Text("F")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(AppTheme.primaryText)
-                )
+            // Profile Button
+            Button {
+                // navigate to profile
+            } label: {
+                Image(systemName: "person.crop.circle")
+                    .font(.system(size: 28, weight: .medium))
+                    .frame(width: 50, height: 50)
+            }
+            .buttonStyle(.plain)
+            .glassEffect(.regular.interactive(), in: .circle)
         }
+        .foregroundStyle(AppTheme.primaryText)
         .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .padding(.vertical, 8)
+        .padding(.top, 4)
     }
 
     private var welcomeContent: some View {
@@ -210,7 +205,7 @@ struct ChatView: View {
                         
                     }) {
                         Image(systemName: "plus")
-                            .font(.system(size: 24, weight: .medium))
+                            .font(.system(size: 28, weight: .light))
                             .foregroundColor(AppTheme.subtleText)
                             .frame(width: 44, height: 44)
                     }
@@ -225,11 +220,12 @@ struct ChatView: View {
                         
                         
                     }) {
-                        Image(systemName: "mic.fill")
+                        Image(systemName: "mic")
                             .font(.system(size: 22, weight: .regular))
                             .foregroundColor(AppTheme.subtleText)
                             .frame(width: 44, height: 44)
                     }
+                    .padding(.trailing, 12)
 
                     // Send Button (Up Arrow) - Black Circle
                     Button(action: {
@@ -249,18 +245,12 @@ struct ChatView: View {
                 }
                 .padding(.bottom, 12)
             }
-            .background(
-                RoundedRectangle(cornerRadius: 28)
-                    .fill(AppTheme.surface)
-                    .shadow(color: AppTheme.shadowLight, radius: 12, x: 0, y: -2)
-            )
+            .glassEffect(.regular, in:RoundedRectangle(cornerRadius: 28))
             .padding(.horizontal, 16)
             .padding(.bottom, 8)
         }
-        .background(
-            AppTheme.background
-                .ignoresSafeArea(edges: .bottom)
-        )
+        .background(Color.clear.ignoresSafeArea(edges: .bottom))
+        .foregroundStyle(AppTheme.subtleText)
     }
 
     private func updateTextEditorHeight() {
