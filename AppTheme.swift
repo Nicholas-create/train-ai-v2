@@ -17,9 +17,8 @@ struct AppTheme {
     static let accent = Color(red: 0.18, green: 0.55, blue: 0.34)
 
     // MARK: - Message Bubbles
-    static let userBubble = Color.black
-    static let userBubbleText = Color.white
-    static let aiBubble = Color.white
+    static let userBubble = Color(red: 0.87, green: 0.84, blue: 0.79)
+    static let userBubbleText = Color(red: 0.15, green: 0.13, blue: 0.12)
     static let aiBubbleText = Color.primary
 
     // MARK: - Buttons

@@ -33,62 +33,81 @@ struct ChatView: View {
     }
 
     private var mainChatView: some View {
-        ZStack {
-            // Gradient Background
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    AppTheme.background,
-                    AppTheme.backgroundGradientEnd
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+          NavigationStack {
+              ZStack {
+                  // Gradient Background
+                  LinearGradient(
+                      gradient: Gradient(colors: [
+                          AppTheme.background,
+                          AppTheme.backgroundGradientEnd
+                      ]),
+                      startPoint: .top,
+                      endPoint: .bottom
+                  )
+                  .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                // Top Navigation Bar
-                topNavigationBar
+                  VStack(spacing: 0) {
+                      // Message area or welcome screen
+                      if chatService.messages.isEmpty {
+                          Spacer()
+                          welcomeContent
+                          Spacer()
+                      } else {
+                          messageListView
+                      }
 
-                // Message area or welcome screen
-                if chatService.messages.isEmpty {
-                    Spacer()
-                    welcomeContent
-                    Spacer()
-                } else {
-                    messageListView
-                }
+                      // Loading / error indicators
+                      if chatService.isLoading {
+                          HStack(spacing: 8) {
+                              ProgressView()
+                                  .scaleEffect(0.8)
+                              Text("Claude is thinking...")
+                                  .font(.system(size: 14))
+                                  .foregroundColor(AppTheme.secondaryText)
+                          }
+                          .padding(.horizontal, 20)
+                          .padding(.vertical, 8)
+                          .frame(maxWidth: .infinity, alignment: .leading)
+                      }
 
-                // Loading / error indicators
-                if chatService.isLoading {
-                    HStack(spacing: 8) {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                        Text("Claude is thinking...")
-                            .font(.system(size: 14))
-                            .foregroundColor(AppTheme.secondaryText)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                      if let error = chatService.errorMessage {
+                          Text(error)
+                              .font(.system(size: 13))
+                              .foregroundColor(AppTheme.errorText)
+                              .padding(.horizontal, 20)
+                              .padding(.vertical, 6)
+                              .frame(maxWidth: .infinity, alignment: .leading)
+                      }
 
-                if let error = chatService.errorMessage {
-                    Text(error)
-                        .font(.system(size: 13))
-                        .foregroundColor(AppTheme.errorText)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 6)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                      // Bottom Input Container
+                      bottomInputContainer
+                  }
+              }
+              .onTapGesture {
+                  hideKeyboard()
+              }
+              .toolbar {
+                  ToolbarItem(placement: .topBarLeading) {
+                      Button {
+                          withAnimation { isSideMenuOpen.toggle() }
+                      } label: {
+                          Image(systemName: "sidebar.left")
+                              .font(.system(size: 16, weight: .medium))
+                      }
+                  }
+                  ToolbarItem(placement: .topBarTrailing) {
+                      Button {
+                          // new chat logic
+                      } label: {
+                          Image(systemName: "plus.message")
+                              .font(.system(size: 16, weight: .medium))
+                      }
+                  }
+              }
+              .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
+          }
+      }
 
-                // Bottom Input Container
-                bottomInputContainer
-            }
-        }
-        .onTapGesture {
-            hideKeyboard()
-        }
-    }
 
     private var messageListView: some View {
         ScrollViewReader { proxy in
@@ -112,37 +131,7 @@ struct ChatView: View {
         }
     }
 
-    private var topNavigationBar: some View {
-        HStack {
-            // Sidebar Button
-            Button {
-                withAnimation { isSideMenuOpen.toggle() }
-            } label: {
-                Image(systemName: "sidebar.left")
-                    .font(.system(size: 22, weight: .medium))
-                    .frame(width: 50, height: 50)
-            }
-            .buttonStyle(.plain)
-            .glassEffect(.regular.interactive(), in: .circle)
-
-            Spacer()
-
-            // Profile Button
-            Button {
-                // navigate to profile
-            } label: {
-                Image(systemName: "person.crop.circle")
-                    .font(.system(size: 28, weight: .medium))
-                    .frame(width: 50, height: 50)
-            }
-            .buttonStyle(.plain)
-            .glassEffect(.regular.interactive(), in: .circle)
-        }
-        .foregroundStyle(AppTheme.primaryText)
-        .padding(.horizontal, 20)
-        .padding(.vertical, 8)
-        .padding(.top, 4)
-    }
+ 
 
     private var welcomeContent: some View {
         VStack(spacing: 20) {
@@ -287,21 +276,27 @@ struct MessageBubble: View {
     private var isUser: Bool { message.role == "user" }
 
     var body: some View {
-        HStack {
-            if isUser { Spacer(minLength: 60) }
-
+        if isUser {
+            HStack {
+                Spacer(minLength: 60)
+                Text(message.content)
+                    .font(.system(size: 16))
+                    .foregroundColor(AppTheme.userBubbleText)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 18)
+                            .fill(AppTheme.userBubble)
+                            .shadow(color: AppTheme.shadowSubtle, radius: 4, x: 0, y: 2)
+                    )
+            }
+        } else {
             Text(message.content)
                 .font(.system(size: 16))
-                .foregroundColor(isUser ? AppTheme.userBubbleText : AppTheme.aiBubbleText)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 18)
-                        .fill(isUser ? AppTheme.userBubble : AppTheme.aiBubble)
-                        .shadow(color: AppTheme.shadowSubtle, radius: 4, x: 0, y: 2)
-                )
-
-            if !isUser { Spacer(minLength: 60) }
+                .foregroundColor(AppTheme.aiBubbleText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 4)
         }
     }
 }

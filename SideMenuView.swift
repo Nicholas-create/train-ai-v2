@@ -26,80 +26,76 @@ struct SideMenuView: View {
             // Side Menu Content
             HStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    // Menu Header
-                    HStack {
-                        Text("Menu")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(AppTheme.primaryText)
 
-                        Spacer()
+                Text("Train AI")
+                        .font(.system(size: 34, weight: .regular, design: .serif))
+                        .foregroundStyle(AppTheme.primaryText)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 20)
+                        .padding(.bottom, 24)
+                    // ── Nav Items
+                    navRow(icon: "bubble.left.and.bubble.right", label: "Chat") {withAnimation { }}
+                    navRow(icon: "figure.strengthtraining.traditional", label: "Workout Program") { }
+                    navRow(icon: "clock", label: "History") { }
+                    navRow(icon: "chart.line.uptrend.xyaxis", label: "Progression") { }
+                    navRow(icon: "person.crop.circle", label: "Profile") { }
+                    
+                    // ── Separator
 
-                        Button(action: {
-                            withAnimation {
-                                isOpen = false
-                            }
-                        }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(AppTheme.primaryText)
-                        }
-                    }
-                    .padding()
-                    .background(AppTheme.surface)
+                    Divider()
+                          .padding(.horizontal, 24)
+                          .padding(.vertical, 20)
 
-                    // Menu Content
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 20) {
-                            // API Key Section
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text("Anthropic API Key")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(AppTheme.secondaryText)
+                      ScrollView {
+                          VStack(alignment: .leading, spacing: 10) {
+                              Text("Anthropic API Key")
+                                  .font(.system(size: 14, weight: .semibold))
+                                  .foregroundStyle(AppTheme.secondaryText)
 
-                                SecureField("sk-ant-...", text: $apiKeyInput)
-                                    .font(.system(size: 14))
-                                    .padding(10)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .fill(AppTheme.inputFieldBackground)
-                                    )
-                                    .onAppear {
-                                        // Pre-fill with placeholder if key already saved
-                                        if KeychainHelper.loadAPIKey() != nil {
-                                            apiKeyInput = ""
-                                        }
-                                    }
+                              SecureField("sk-ant-...", text: $apiKeyInput)
+                                  .font(.system(size: 14))
+                                  .padding(10)
+                                  .background(
+                                      RoundedRectangle(cornerRadius: 10)
+                                          .fill(AppTheme.inputFieldBackground)
+                                  )
+                                  .onAppear {
+                                      if KeychainHelper.loadAPIKey() != nil {
+                                          apiKeyInput = ""
+                                      }
+                                  }
 
-                                Button(action: saveAPIKey) {
-                                    Text("Save Key")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(AppTheme.buttonText)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 20)
-                                                .fill(AppTheme.buttonBackground)
-                                        )
-                                }
+                              Button(action: saveAPIKey) {
+                                  Text("Save Key")
+                                      .font(.system(size: 14, weight: .semibold))
+                                      .foregroundStyle(AppTheme.buttonText)
+                                      .frame(maxWidth: .infinity)
+                                      .padding(.vertical, 10)
+                                      .background(
+                                          RoundedRectangle(cornerRadius: 20)
+                                              .fill(AppTheme.buttonBackground)
+                                      )
+                              }
 
-                                if let status = saveStatus {
-                                    Text(status)
-                                        .font(.system(size: 12))
-                                        .foregroundColor(status.hasPrefix("Saved") ? AppTheme.successText : AppTheme.errorText)
-                                }
+                              if let status = saveStatus {
+                                  Text(status)
+                                      .font(.system(size: 12))
+                                      .foregroundStyle(status.hasPrefix("Saved") ? AppTheme.successText : AppTheme.errorText)
+                              }
 
-                                if KeychainHelper.loadAPIKey() != nil {
-                                    Text("Key is saved. Enter a new key to replace it.")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(AppTheme.secondaryText)
-                                }
-                            }
-                        }
-                        .padding()
-                    }
+                              if KeychainHelper.loadAPIKey() != nil {
+                                  Text("Key is saved. Enter a new key to replace it.")
+                                      .font(.system(size: 11))
+                                      .foregroundStyle(AppTheme.secondaryText)
+                              }
+                          }
+                          .padding(.horizontal, 24)
+                          .padding(.bottom, 20)
+                      }
 
-                    Spacer()
+                      Spacer()
+
+
                 }
                 .frame(width: 320)
                 .background(AppTheme.surface)
@@ -110,6 +106,23 @@ struct SideMenuView: View {
         }
     }
 
+    private func navRow(icon: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .foregroundStyle(AppTheme.primaryText)
+                    .frame(width: 28)
+                Text(label)
+                    .font(.system(size: 17))
+                    .foregroundStyle(AppTheme.primaryText)
+                Spacer()
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 24)
+        }
+    }
+    
     private func saveAPIKey() {
         let trimmed = apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
@@ -123,6 +136,7 @@ struct SideMenuView: View {
         }
     }
 }
+
 
 #Preview {
     SideMenuView(isOpen: .constant(true))
