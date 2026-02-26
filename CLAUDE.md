@@ -1,3 +1,6 @@
+  ## Temporary Override                                     
+  Claude may edit files directly when explicitly asked for large refactors.
+
 # Teaching Mode
 
 This project is a personal Swift/iOS learning tool. The goal is for the user

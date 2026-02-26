@@ -6,108 +6,94 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ChatView: View {
+    @Bindable var chatService: ChatService
     @State private var messageText = ""
-    @State private var isSideMenuOpen = false
     @State private var textEditorHeight: CGFloat = 40
-    @State private var chatService = ChatService()
     @State private var containerWidth: CGFloat = 390
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            // Main Chat View
-            mainChatView
-                .offset(x: isSideMenuOpen ? 320 : 0)
-                .zIndex(2)
-            // Side Menu
-            if isSideMenuOpen {
-                SideMenuView(isOpen: $isSideMenuOpen)
-                    .transition(.identity)
-                    .zIndex(1)
+        ZStack {
+            // Gradient Background
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    AppTheme.background,
+                    AppTheme.backgroundGradientEnd
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Message area or welcome screen
+                if chatService.messages.isEmpty {
+                    Spacer()
+                    welcomeContent
+                    Spacer()
+                } else {
+                    messageListView
+                }
+
+                // Loading / error indicators
+                if chatService.isLoading {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Claude is thinking...")
+                            .font(.system(size: 14))
+                            .foregroundColor(AppTheme.secondaryText)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                if let error = chatService.errorMessage {
+                    Text(error)
+                        .font(.system(size: 13))
+                        .foregroundColor(AppTheme.errorText)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // Bottom Input Container
+                bottomInputContainer
             }
         }
-        .animation(.interactiveSpring(response: 0.2, dampingFraction: 1.0, blendDuration: 0), value: isSideMenuOpen)
-        
-        // .ignoresSafeArea(.keyboard, edges: .bottom) - Deleted so message input box keeps appearing above keyboard
+        .onTapGesture {
+            hideKeyboard()
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .medium))
+                        Text("Chats")
+                            .font(.system(size: 17))
+                    }
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    chatService.startNewChat()
+                } label: {
+                    Image(systemName: "plus.message")
+                        .font(.system(size: 16, weight: .medium))
+                }
+            }
+        }
+        .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
     }
-
-    private var mainChatView: some View {
-          NavigationStack {
-              ZStack {
-                  // Gradient Background
-                  LinearGradient(
-                      gradient: Gradient(colors: [
-                          AppTheme.background,
-                          AppTheme.backgroundGradientEnd
-                      ]),
-                      startPoint: .top,
-                      endPoint: .bottom
-                  )
-                  .ignoresSafeArea()
-
-                  VStack(spacing: 0) {
-                      // Message area or welcome screen
-                      if chatService.messages.isEmpty {
-                          Spacer()
-                          welcomeContent
-                          Spacer()
-                      } else {
-                          messageListView
-                      }
-
-                      // Loading / error indicators
-                      if chatService.isLoading {
-                          HStack(spacing: 8) {
-                              ProgressView()
-                                  .scaleEffect(0.8)
-                              Text("Claude is thinking...")
-                                  .font(.system(size: 14))
-                                  .foregroundColor(AppTheme.secondaryText)
-                          }
-                          .padding(.horizontal, 20)
-                          .padding(.vertical, 8)
-                          .frame(maxWidth: .infinity, alignment: .leading)
-                      }
-
-                      if let error = chatService.errorMessage {
-                          Text(error)
-                              .font(.system(size: 13))
-                              .foregroundColor(AppTheme.errorText)
-                              .padding(.horizontal, 20)
-                              .padding(.vertical, 6)
-                              .frame(maxWidth: .infinity, alignment: .leading)
-                      }
-
-                      // Bottom Input Container
-                      bottomInputContainer
-                  }
-              }
-              .onTapGesture {
-                  hideKeyboard()
-              }
-              .toolbar {
-                  ToolbarItem(placement: .topBarLeading) {
-                      Button {
-                          withAnimation { isSideMenuOpen.toggle() }
-                      } label: {
-                          Image(systemName: "sidebar.left")
-                              .font(.system(size: 16, weight: .medium))
-                      }
-                  }
-                  ToolbarItem(placement: .topBarTrailing) {
-                      Button {
-                          // new chat logic
-                      } label: {
-                          Image(systemName: "plus.message")
-                              .font(.system(size: 16, weight: .medium))
-                      }
-                  }
-              }
-              .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
-          }
-      }
-
 
     private var messageListView: some View {
         ScrollViewReader { proxy in
@@ -130,8 +116,6 @@ struct ChatView: View {
             }
         }
     }
-
- 
 
     private var welcomeContent: some View {
         VStack(spacing: 20) {
@@ -189,9 +173,6 @@ struct ChatView: View {
                     // Plus Button (Attach)
                     Button(action: {
                         // Attach action
-                        
-                        
-                        
                     }) {
                         Image(systemName: "plus")
                             .font(.system(size: 28, weight: .light))
@@ -205,9 +186,6 @@ struct ChatView: View {
                     // Microphone Button
                     Button(action: {
                         // Microphone action
-                        
-                        
-                        
                     }) {
                         Image(systemName: "mic")
                             .font(.system(size: 22, weight: .regular))
@@ -257,7 +235,7 @@ struct ChatView: View {
     private func sendMessage() {
         let trimmed = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        chatService.send(userText: trimmed)
+        chatService.send(userText: trimmed, modelContext: modelContext)
         messageText = ""
         textEditorHeight = 40
         hideKeyboard()
@@ -302,5 +280,8 @@ struct MessageBubble: View {
 }
 
 #Preview {
-    ChatView()
+    NavigationStack {
+        ChatView(chatService: ChatService())
+    }
+    .modelContainer(for: [Conversation.self, SDMessage.self], inMemory: true)
 }

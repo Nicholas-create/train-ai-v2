@@ -12,8 +12,10 @@ import SwiftData
 struct train_ai_v2App: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
-        ])
+              Conversation.self,
+              SDMessage.self,
+          ])
+
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {

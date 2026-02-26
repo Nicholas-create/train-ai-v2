@@ -34,8 +34,10 @@ struct SideMenuView: View {
                         .padding(.top, 20)
                         .padding(.bottom, 24)
                     // ── Nav Items
-                    navRow(icon: "bubble.left.and.bubble.right", label: "Chat") {withAnimation { }}
-                    navRow(icon: "figure.strengthtraining.traditional", label: "Workout Program") { }
+                    navRow(icon: "bubble.left.and.bubble.right", label: "Chats") {
+                        withAnimation { isOpen = false }
+                    }
+                    navRow(icon: "sparkle.text.clipboard", label: "Workout Program") { }
                     navRow(icon: "clock", label: "History") { }
                     navRow(icon: "chart.line.uptrend.xyaxis", label: "Progression") { }
                     navRow(icon: "person.crop.circle", label: "Profile") { }
@@ -99,7 +101,7 @@ struct SideMenuView: View {
                 }
                 .frame(width: 320)
                 .background(AppTheme.surface)
-                .shadow(color: AppTheme.shadowMedium, radius: 10, x: 5, y: 0)
+                .shadow(color: AppTheme.shadowMedium, radius: 10, x: -5, y: 0)
 
                 Spacer()
             }
