@@ -17,6 +17,14 @@ struct SettingsView: View {
         default:      return "System"
         }
     }
+    
+    private var colorSchemeIcon: String {
+        switch colorScheme {
+        case "light": return "sun.max"
+        case "dark":  return "moon"
+        default:      return "circle.lefthalf.filled"
+        }
+    }
 
     private var unitsLabel: String { units == "imperial" ? "Imperial" : "Metric" }
 
@@ -26,7 +34,7 @@ struct SettingsView: View {
                 // ── Section 1: Appearance
                 Section("Appearance") {
                     HStack(spacing: 16) {
-                        Image(systemName: "circle.lefthalf.filled")
+                        Image(systemName: colorSchemeIcon)
                             .foregroundStyle(Color.gray)
                             .frame(width: 24)
                         Text("Theme")
