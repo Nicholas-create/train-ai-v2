@@ -10,7 +10,7 @@ import Foundation
 struct ChatMessage: Identifiable, Equatable {
     let id: UUID
     let role: String      // "user" or "assistant"
-    let content: String
+    var content: String
     let timestamp: Date
 
     init(role: String, content: String) {

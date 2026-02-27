@@ -33,65 +33,75 @@
       }
 
       private func callAnthropicAPI(apiKey: String, modelContext: ModelContext) async {
-          let url = URL(string: "https://api.anthropic.com/v1/messages")!
-          var request = URLRequest(url: url)
-          request.httpMethod = "POST"
-          request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-          request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
-          request.setValue("application/json", forHTTPHeaderField: "content-type")
+           let url = URL(string: "https://api.anthropic.com/v1/messages")!
+           var request = URLRequest(url: url)
+           request.httpMethod = "POST"
+           request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+           request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+           request.setValue("application/json", forHTTPHeaderField: "content-type")
 
-          let messagePayload = messages.map { ["role": $0.role, "content": $0.content] }
-          let body: [String: Any] = [
-              "model": selectedModel.rawValue,
-              "max_tokens": 1024,
-              "messages": messagePayload
-          ]
+           let messagePayload = messages.map { ["role": $0.role, "content": $0.content] }
+           let body: [String: Any] = [
+               "model": selectedModel.rawValue,
+               "max_tokens": 1024,
+               "stream": true,                          // ← NEW
+               "messages": messagePayload
+           ]
 
-          do {
-              request.httpBody = try JSONSerialization.data(withJSONObject: body)
-          } catch {
-              await MainActor.run {
-                  errorMessage = "Failed to encode request: \(error.localizedDescription)"
-                  isLoading = false
-              }
-              return
-          }
+           do {
+               request.httpBody = try JSONSerialization.data(withJSONObject: body)
+           } catch {
+               await MainActor.run {
+                   errorMessage = "Failed to encode request: \(error.localizedDescription)"
+                   isLoading = false
+               }
+               return
+           }
 
-          do {
-              let (data, response) = try await URLSession.shared.data(for: request)
+           // Add an empty placeholder message right away
+           await MainActor.run {
+               messages.append(ChatMessage(role: "assistant", content: ""))
+           }
 
-              if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-                  let raw = String(data: data, encoding: .utf8) ?? "Unknown error"
-                  await MainActor.run {
-                      errorMessage = "API error (\(httpResponse.statusCode)): \(raw)"
-                      isLoading = false
-                  }
-                  return
-              }
+           do {
+               let (asyncBytes, response) = try await URLSession.shared.bytes(for: request)  // ← CHANGED
 
-              guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                    let contentArray = json["content"] as? [[String: Any]],
-                    let firstContent = contentArray.first,
-                    let text = firstContent["text"] as? String else {
-                  await MainActor.run {
-                      errorMessage = "Unexpected response format from API."
-                      isLoading = false
-                  }
-                  return
-              }
+               if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                   await MainActor.run {
+                       messages.removeLast()  // remove the empty placeholder
+                       errorMessage = "API error (\(httpResponse.statusCode))"
+                       isLoading = false
+                   }
+                   return
+               }
 
-              await MainActor.run {
-                  messages.append(ChatMessage(role: "assistant", content: text))
-                  isLoading = false
-                  saveCurrentConversation(modelContext: modelContext)
-              }
-          } catch {
-              await MainActor.run {
-                  errorMessage = "Network error: \(error.localizedDescription)"
-                  isLoading = false
-              }
-          }
-      }
+               // Read the stream line by line
+               for try await line in asyncBytes.lines {
+                   guard line.hasPrefix("data: ") else { continue }
+                   let jsonString = String(line.dropFirst(6))  // strip "data: "
+                   guard jsonString != "[DONE]" else { break }
+
+                   if let data = jsonString.data(using: .utf8),
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let delta = (json["delta"] as? [String: Any])?["text"] as? String {
+                       await MainActor.run {
+                           messages[messages.count - 1].content += delta  // append to last message
+                       }
+                   }
+               }
+
+               await MainActor.run {
+                   isLoading = false
+                   saveCurrentConversation(modelContext: modelContext)
+               }
+           } catch {
+               await MainActor.run {
+                   errorMessage = "Network error: \(error.localizedDescription)"
+                   isLoading = false
+               }
+           }
+       }
+
 
       func saveCurrentConversation(modelContext: ModelContext) {
           if currentConversation == nil {
