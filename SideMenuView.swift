@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SideMenuView: View {
     @Binding var isOpen: Bool
+    var width: CGFloat
     @State private var apiKeyInput: String = ""
     @State private var saveStatus: String? = nil
 
@@ -103,7 +104,7 @@ struct SideMenuView: View {
 
 
                 }
-                .frame(width: 320)
+                .frame(width: width)
                 .background(AppTheme.surface)
                 .shadow(color: AppTheme.shadowMedium, radius: 10, x: -5, y: 0)
 
@@ -145,5 +146,5 @@ struct SideMenuView: View {
 
 
 #Preview {
-    SideMenuView(isOpen: .constant(true))
+    SideMenuView(isOpen: .constant(true), width: 320)
 }

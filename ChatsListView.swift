@@ -28,31 +28,32 @@ struct ChatsListView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            // Main content with NavigationStack
-            mainContent
-                .offset(x: isSideMenuOpen ? 320 : 0)
-                .zIndex(2)
+        GeometryReader { geo in
+            let sideMenuWidth = min(geo.size.width * 0.82, 380)
 
-            // Invisible overlay to catch taps when menu is open
-            if isSideMenuOpen {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        withAnimation { isSideMenuOpen = false }
-                    }
-                    .offset(x: 320)
-                    .zIndex(3)
-            }
+            ZStack(alignment: .leading) {
+                mainContent
+                    .offset(x: isSideMenuOpen ? sideMenuWidth : 0)
+                    .zIndex(2)
 
-            // Side Menu
-            if isSideMenuOpen {
-                SideMenuView(isOpen: $isSideMenuOpen)
-                    .transition(.identity)
-                    .zIndex(1)
+                if isSideMenuOpen {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation { isSideMenuOpen = false }
+                        }
+                        .offset(x: sideMenuWidth)
+                        .zIndex(3)
+                }
+
+                if isSideMenuOpen {
+                    SideMenuView(isOpen: $isSideMenuOpen, width: sideMenuWidth)
+                        .transition(.identity)
+                        .zIndex(1)
+                }
             }
+            .animation(.interactiveSpring(response: 0.2, dampingFraction: 1.0, blendDuration: 0), value: isSideMenuOpen)
         }
-        .animation(.interactiveSpring(response: 0.2, dampingFraction: 1.0, blendDuration: 0), value: isSideMenuOpen)
     }
 
     private var mainContent: some View {
@@ -106,6 +107,7 @@ struct ChatsListView: View {
                                     .padding(.vertical, 2)
                                 }
                                 .listRowBackground(Color.clear)
+                             
                             }
                             .onDelete(perform: deleteConversations)
                         }
@@ -157,6 +159,7 @@ struct ChatsListView: View {
                 }
             }
             .navigationTitle("Chats")
+            .navigationBarTitleDisplayMode(.inline) 
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
