@@ -6,72 +6,155 @@
 import SwiftUI
 
 struct SettingsView: View {
-    // Stored in UserDefaults via @AppStorage
+    @Environment(\.dismiss) private var dismiss
     @AppStorage("app_color_scheme") private var colorScheme: String = "system"
     @AppStorage("app_units") private var units: String = "metric"
 
-    // Keychain API key — same pattern as SideMenuView used to have
-    @State private var apiKeyInput: String = ""
-    @State private var saveStatus: String? = nil
+    private var colorSchemeLabel: String {
+        switch colorScheme {
+        case "light": return "Light"
+        case "dark":  return "Dark"
+        default:      return "System"
+        }
+    }
+
+    private var unitsLabel: String { units == "imperial" ? "Imperial" : "Metric" }
 
     var body: some View {
         NavigationStack {
-            Form {
+            List {
                 // ── Section 1: Appearance
                 Section("Appearance") {
-                    Picker("Theme", selection: $colorScheme) {
-                        Text("System").tag("system")
-                        Text("Light").tag("light")
-                        Text("Dark").tag("dark")
+                    HStack(spacing: 16) {
+                        Image(systemName: "circle.lefthalf.filled")
+                            .foregroundStyle(Color.gray)
+                            .frame(width: 24)
+                        Text("Theme")
+                            .foregroundStyle(AppTheme.primaryText)
+                        Spacer()
+                        Menu {
+                            Button("System") { colorScheme = "system" }
+                            Button("Light")  { colorScheme = "light"  }
+                            Button("Dark")   { colorScheme = "dark"   }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(colorSchemeLabel)
+                                    .foregroundStyle(AppTheme.secondaryText)
+                                Image(systemName: "chevron.up.chevron.down")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(AppTheme.secondaryText)
+                            }
+                        }
                     }
-                    .pickerStyle(.segmented)
+                    .listRowBackground(AppTheme.card)
                 }
 
                 // ── Section 2: Units
                 Section("Units") {
-                    Picker("Measurement", selection: $units) {
-                        Text("Metric").tag("metric")
-                        Text("Imperial").tag("imperial")
-                    }
-                    .pickerStyle(.segmented)
-                }
-
-                // ── Section 3: API Key (moved from SideMenuView)
-                Section("Anthropic API Key") {
-                    SecureField("sk-ant-...", text: $apiKeyInput)
-                        .onAppear {
-                            if KeychainHelper.loadAPIKey() != nil {
-                                apiKeyInput = ""
+                    HStack(spacing: 16) {
+                        Image(systemName: "ruler")
+                            .foregroundStyle(Color.gray)
+                            .frame(width: 24)
+                        Text("Measurement")
+                            .foregroundStyle(AppTheme.primaryText)
+                        Spacer()
+                        Menu {
+                            Button("Metric")   { units = "metric"   }
+                            Button("Imperial") { units = "imperial" }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(unitsLabel)
+                                    .foregroundStyle(AppTheme.secondaryText)
+                                Image(systemName: "chevron.up.chevron.down")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(AppTheme.secondaryText)
                             }
                         }
-
-                    Button(action: saveAPIKey) {
-                        Text("Save Key")
-                            .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppTheme.buttonBackground)
+                    .listRowBackground(AppTheme.card)
+                }
 
-                    if let status = saveStatus {
-                        Text(status)
-                            .font(.caption)
-                            .foregroundStyle(
-                                status.hasPrefix("Saved")
-                                    ? AppTheme.successText
-                                    : AppTheme.errorText
-                            )
+                // ── Section 3: API Key (navigates to sub-page)
+                Section("API") {
+                    NavigationLink {
+                        APIKeyView()
+                    } label: {
+                        HStack(spacing: 16){
+                            Image(systemName: "key.horizontal")
+                                .foregroundStyle(Color.gray)
+                                .frame(width: 24)
+                            Text("Anthropic API Key")
+                                .foregroundStyle(AppTheme.primaryText)
+                            Spacer()
+                            Text(KeychainHelper.loadAPIKey() != nil ? "Saved" : "Not set")
+                                .foregroundStyle(AppTheme.secondaryText)
+                        }
                     }
-
-                    if KeychainHelper.loadAPIKey() != nil {
-                        Text("Key is saved. Enter a new key to replace it.")
-                            .font(.caption)
+                    .listRowBackground(AppTheme.card)
+                }
+            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)        // ← add: hides the default gray system background
+            .background(AppTheme.elevated)           // ← add: replaces it with your Elevated color
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(AppTheme.secondaryText)
                     }
                 }
             }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
         }
+    }
+}
+
+// ── Sub-page: API Key entry ────────────────────────────────────────────────
+
+struct APIKeyView: View {
+    @State private var apiKeyInput: String = ""
+    @State private var saveStatus: String? = nil
+
+    var body: some View {
+        Form {
+            Section {
+                SecureField("sk-ant-...", text: $apiKeyInput)
+                    .onAppear {
+                        if KeychainHelper.loadAPIKey() != nil {
+                            apiKeyInput = ""
+                        }
+                    }
+            } footer: {
+                if KeychainHelper.loadAPIKey() != nil {
+                    Text("A key is already saved. Enter a new one to replace it.")
+                }
+            }
+
+            Section {
+                Button(action: saveAPIKey) {
+                    Text("Save Key")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(AppTheme.buttonBackground)
+
+                if let status = saveStatus {
+                    Text(status)
+                        .font(.caption)
+                        .foregroundStyle(
+                            status.hasPrefix("Saved")
+                                ? AppTheme.successText
+                                : AppTheme.errorText
+                        )
+                }
+            }
+        }
+        .navigationTitle("API Key")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func saveAPIKey() {

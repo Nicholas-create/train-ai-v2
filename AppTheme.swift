@@ -12,6 +12,8 @@ struct AppTheme {
     static let background = Color("Background")
     static let backgroundGradientEnd = Color("BackgroundGradientEnd")
     static let surface = Color("Surface")
+    static let elevated = Color("Elevated")   // ← add this
+    static let card = Color("Card")   
 
     // MARK: - Accent (change this to retheme the whole app)
     static let accent = Color.accentColor
