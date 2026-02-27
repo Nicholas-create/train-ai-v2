@@ -34,10 +34,14 @@ struct SideMenuView: View {
                         .padding(.top, 20)
                         .padding(.bottom, 24)
                     // ── Nav Items
+                    navRow(icon: "sparkle.text.clipboard", label: "Workout Program") {
+                        withAnimation { isOpen = false }
+                    }
+                    
                     navRow(icon: "bubble.left.and.bubble.right", label: "Chats") {
                         withAnimation { isOpen = false }
                     }
-                    navRow(icon: "sparkle.text.clipboard", label: "Workout Program") { }
+                    
                     navRow(icon: "clock", label: "History") { }
                     navRow(icon: "chart.line.uptrend.xyaxis", label: "Progression") { }
                     navRow(icon: "person.crop.circle", label: "Profile") { }

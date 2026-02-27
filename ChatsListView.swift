@@ -16,6 +16,7 @@ struct ChatsListView: View {
     @State private var isSideMenuOpen = false
     @State private var navigateToChat = false
     @State private var searchText = ""
+    @FocusState private var isSearchFocused: Bool
 
     private var filteredConversations: [Conversation] {
         if searchText.isEmpty {
@@ -71,11 +72,15 @@ struct ChatsListView: View {
                 VStack(spacing: 0) {
                     // Chat list
                     if filteredConversations.isEmpty {
-                        Spacer()
-                        Text(searchText.isEmpty ? "No conversations yet" : "No results found")
-                            .font(.system(size: 17))
-                            .foregroundColor(AppTheme.secondaryText)
-                        Spacer()
+                        VStack {
+                            Spacer()
+                            Text(searchText.isEmpty ? "No conversations yet" : "No results found")
+                                .font(.system(size: 17))
+                                .foregroundColor(AppTheme.secondaryText)
+                            Spacer()
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture { isSearchFocused = false }
                     } else {
                         List {
                             ForEach(filteredConversations) { conversation in
@@ -86,7 +91,7 @@ struct ChatsListView: View {
                                     HStack {
                                         VStack(alignment: .leading, spacing: 4) {
                                             Text(conversation.title)
-                                                .font(.system(size: 16, weight: .semibold))
+                                                .font(.system(size: 16, weight: .regular))
                                                 .foregroundColor(AppTheme.primaryText)
                                                 .lineLimit(1)
                                             Text(conversation.updatedAt.relativeDescription())
@@ -98,7 +103,7 @@ struct ChatsListView: View {
                                             .font(.system(size: 14, weight: .medium))
                                             .foregroundColor(AppTheme.secondaryText)
                                     }
-                                    .padding(.vertical, 4)
+                                    .padding(.vertical, 2)
                                 }
                                 .listRowBackground(Color.clear)
                             }
@@ -115,23 +120,37 @@ struct ChatsListView: View {
                                 .foregroundColor(AppTheme.secondaryText)
                             TextField("Search chats", text: $searchText)
                                 .font(.system(size: 16))
+                                .focused($isSearchFocused) // <-- ADDED
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
                         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22))
 
-                        Button {
-                            chatService.startNewChat()
-                            navigateToChat = true
-                        } label: {
-                            Image(systemName: "plus.message")
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundColor(Color.white)
-                                .frame(width: 44, height: 44)
-                                .background(Color.green.opacity(0.8))
-                                .clipShape(Circle())
+                        if isSearchFocused {
+                            Button {
+                                isSearchFocused = false
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 28))
+                                    .foregroundColor(AppTheme.secondaryText)
+                                    .frame(width: 44, height: 44)
+                                    .clipShape(Circle())
+                            }
+                            .glassEffect(.regular, in: Circle())
+                        } else {
+                            Button {
+                                chatService.startNewChat()
+                                navigateToChat = true
+                            } label: {
+                                Image(systemName: "plus.message")
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundColor(Color.white)
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.green.opacity(1.0))
+                                    .clipShape(Circle())
+                            }
+                            .glassEffect(.regular, in: Circle())
                         }
-                        .glassEffect(.regular, in: Circle())
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
@@ -142,6 +161,7 @@ struct ChatsListView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         withAnimation { isSideMenuOpen.toggle() }
+                        isSearchFocused = false   // ← ADDED
                     } label: {
                         Image(systemName: "sidebar.left")
                             .font(.system(size: 16, weight: .medium))
