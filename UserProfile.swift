@@ -47,7 +47,6 @@ final class UserProfile {
     var activityLevel: String?    // "sedentary" | "lightly_active" | "moderately_active" | etc.
     var sleepHoursPerNight: Double?
     var stressLevel: Int?         // 1–10
-    var dailyWaterLitres: Double?
     var dietaryPreferences: String?
     var foodAllergies: String?
 

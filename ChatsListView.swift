@@ -66,6 +66,7 @@ struct ChatsListView: View {
                 } else {
                     ProgressView()
                         .onAppear {
+                            guard profiles.isEmpty else { return }
                             let p = UserProfile()
                             modelContext.insert(p)
                         }
