@@ -14,6 +14,7 @@ struct train_ai_v2App: App {
         let schema = Schema([
               Conversation.self,
               SDMessage.self,
+              UserProfile.self,
           ])
 
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)

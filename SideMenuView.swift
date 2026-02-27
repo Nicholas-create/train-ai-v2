@@ -11,6 +11,7 @@ struct SideMenuView: View {
     @Binding var isOpen: Bool
     var width: CGFloat
     @Binding var isSettingsOpen: Bool
+    @Binding var isProfileOpen: Bool
 
     var body: some View {
         ZStack {
@@ -53,7 +54,10 @@ struct SideMenuView: View {
                         .padding(.horizontal, 24)
                         .padding(.vertical, 20)
 
-                    navRow(icon: "person.crop.circle", label: "Profile") { }
+                    navRow(icon: "person.crop.circle", label: "Profile") {
+                        withAnimation { isOpen = false }
+                        isProfileOpen = true
+                    }
 
                     navRow(icon: "gearshape", label: "Settings") {
                         withAnimation { isOpen = false }
@@ -92,5 +96,6 @@ struct SideMenuView: View {
 
 
 #Preview {
-    SideMenuView(isOpen: .constant(true), width: 320, isSettingsOpen: .constant(false))
+    SideMenuView(isOpen: .constant(true), width: 320,
+                 isSettingsOpen: .constant(false), isProfileOpen: .constant(false))
 }

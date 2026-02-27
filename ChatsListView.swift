@@ -15,6 +15,8 @@ struct ChatsListView: View {
     @State private var chatService = ChatService()
     @State private var isSideMenuOpen = false
     @State private var isSettingsOpen = false
+    @State private var isProfileOpen = false
+    @Query private var profiles: [UserProfile]
     @State private var navigateToChat = false
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
@@ -48,7 +50,8 @@ struct ChatsListView: View {
                 }
 
                 if isSideMenuOpen {
-                    SideMenuView(isOpen: $isSideMenuOpen, width: sideMenuWidth, isSettingsOpen: $isSettingsOpen)
+                    SideMenuView(isOpen: $isSideMenuOpen, width: sideMenuWidth,
+                                 isSettingsOpen: $isSettingsOpen, isProfileOpen: $isProfileOpen)
                         .transition(.identity)
                         .zIndex(1)
                 }
@@ -56,6 +59,17 @@ struct ChatsListView: View {
             .animation(.interactiveSpring(response: 0.2, dampingFraction: 1.0, blendDuration: 0), value: isSideMenuOpen)
             .sheet(isPresented: $isSettingsOpen) {
                 SettingsView()
+            }
+            .sheet(isPresented: $isProfileOpen) {
+                if let profile = profiles.first {
+                    ProfileView(profile: profile)
+                } else {
+                    ProgressView()
+                        .onAppear {
+                            let p = UserProfile()
+                            modelContext.insert(p)
+                        }
+                }
             }
         }
     }
@@ -205,5 +219,5 @@ extension Date {
 
 #Preview {
     ChatsListView()
-        .modelContainer(for: [Conversation.self, SDMessage.self], inMemory: true)
+        .modelContainer(for: [Conversation.self, SDMessage.self, UserProfile.self], inMemory: true)
 }
