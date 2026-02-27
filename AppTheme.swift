@@ -9,17 +9,17 @@ import SwiftUI
 
 struct AppTheme {
     // MARK: - Backgrounds
-    static let background = Color(red: 0.96, green: 0.94, blue: 0.92)
-    static let backgroundGradientEnd = Color(red: 0.97, green: 0.95, blue: 0.93)
+    static let background = Color("Background")
+    static let backgroundGradientEnd = Color("BackgroundGradientEnd")
     static let surface = Color.white
 
     // MARK: - Accent (change this to retheme the whole app)
-    static let accent = Color(red: 0.18, green: 0.55, blue: 0.34)
+    static let accent = Color.accentColor
 
     // MARK: - Message Bubbles
-    static let userBubble = Color(red: 0.87, green: 0.84, blue: 0.79)
-    static let userBubbleText = Color(red: 0.15, green: 0.13, blue: 0.12)
-    static let aiBubbleText = Color.primary
+    static let userBubble = Color("UserBubble")
+    static let userBubbleText = Color("UserBubbleText")
+    static let aiBubbleText = Color("AIBubbleText")
 
     // MARK: - Buttons
     static let sendButton = Color.black
@@ -35,7 +35,7 @@ struct AppTheme {
     static let headlineText = Color.primary.opacity(0.85)
     static let placeholderText = Color.gray.opacity(0.5)
     static let errorText = Color.red
-    static let successText = Color(red: 0.18, green: 0.55, blue: 0.34)
+    static let successText = Color.accentColor
 
     // MARK: - Shadows
     static let shadowLight = Color.black.opacity(0.08)

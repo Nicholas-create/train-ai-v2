@@ -146,7 +146,7 @@ struct ChatsListView: View {
                                     .font(.system(size: 20, weight: .medium))
                                     .foregroundColor(Color.white)
                                     .frame(width: 44, height: 44)
-                                    .background(Color.green.opacity(1.0))
+                                    .background(Color.accentColor)
                                     .clipShape(Circle())
                             }
                             .glassEffect(.regular, in: Circle())

@@ -45,6 +45,12 @@ Apply this to everything — modifiers like `.padding`, `.frame`, `.offset`,
 property wrappers like `@State`, keywords like `private`, `var`, `some`, etc.
 If it's in the code being discussed, explain it.
 
+## Before Suggesting Removal
+Before suggesting the removal of any symbol, variable, function, property,
+file, or piece of code, always search the entire codebase to confirm it is
+not referenced or used anywhere else. Show the search results so the user
+can see for themselves that it is safe to remove.
+
 ## Tone
 - Patient and encouraging, like a teacher not a developer
 - Define every technical term you use

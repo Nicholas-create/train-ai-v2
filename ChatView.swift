@@ -265,7 +265,7 @@ struct MessageBubble: View {
                     .background(
                         RoundedRectangle(cornerRadius: 18)
                             .fill(AppTheme.userBubble)
-                            .shadow(color: AppTheme.shadowSubtle, radius: 4, x: 0, y: 2)
+                            //.shadow(color: AppTheme.shadowSubtle, radius: 4, x: 0, y: 2)
                     )
             }
         } else {
