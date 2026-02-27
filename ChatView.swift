@@ -269,13 +269,84 @@ struct MessageBubble: View {
                     )
             }
         } else {
-            Text(message.content)
-                .font(.system(size: 16))
-                .foregroundColor(AppTheme.aiBubbleText)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 4)
-        }
+             VStack(alignment: .leading, spacing: 2) {
+                 ForEach(Array(message.content.components(separatedBy: "\n").enumerated()), id: \.offset) { index, line in
+                     if line.hasPrefix("### ") {
+                         Text(line.dropFirst(4))
+                             .font(.system(size: 16, weight: .bold))
+                             .foregroundColor(AppTheme.aiBubbleText)
+                     } else if line.hasPrefix("## ") {
+                         Text(line.dropFirst(3))
+                             .font(.system(size: 18, weight: .bold))
+                             .foregroundColor(AppTheme.aiBubbleText)
+                     } else if line.hasPrefix("# ") {
+                         Text(line.dropFirst(2))
+                             .font(.system(size: 22, weight: .bold))
+                             .foregroundColor(AppTheme.aiBubbleText)
+                     } else if line.trimmingCharacters(in: .whitespaces) == "---" {
+                         Divider()
+                             .padding(.vertical, 4)
+
+                     // ── NEW: unordered bullet points ──────────────────────────
+                     } else if line.hasPrefix("- ") || line.hasPrefix("* ") || line.hasPrefix("+ ") {
+                         HStack(alignment: .top, spacing: 8) {
+                             Text("•")
+                                 .font(.system(size: 16))
+                                 .foregroundColor(AppTheme.aiBubbleText)
+                                 .padding(.top, 1)
+                             Text((try? AttributedString(
+                                 markdown: String(line.dropFirst(2)),
+                                 options: AttributedString.MarkdownParsingOptions(
+                                     interpretedSyntax: .inlineOnlyPreservingWhitespace
+                                 )
+                             )) ?? AttributedString(String(line.dropFirst(2))))
+                                 .font(.system(size: 16))
+                                 .foregroundColor(AppTheme.aiBubbleText)
+                                 .frame(maxWidth: .infinity, alignment: .leading)
+                         }
+
+                     // ── NEW: numbered list items ───────────────────────────────
+                     } else if line.first?.isNumber == true,
+                               let dotSpaceRange = line.range(of: ". "),
+                               line[line.startIndex..<dotSpaceRange.lowerBound].allSatisfy({ $0.isNumber }) {
+                         let number = String(line[line.startIndex..<dotSpaceRange.lowerBound]) + "."
+                         let content = String(line[dotSpaceRange.upperBound...])
+                         HStack(alignment: .top, spacing: 6) {
+                             Text(number)
+                                 .font(.system(size: 16, weight: .medium))
+                                 .foregroundColor(AppTheme.aiBubbleText)
+                                 .padding(.top, 1)
+                             Text((try? AttributedString(
+                                 markdown: content,
+                                 options: AttributedString.MarkdownParsingOptions(
+                                     interpretedSyntax: .inlineOnlyPreservingWhitespace
+                                 )
+                             )) ?? AttributedString(content))
+                                 .font(.system(size: 16))
+                                 .foregroundColor(AppTheme.aiBubbleText)
+                                 .frame(maxWidth: .infinity, alignment: .leading)
+                         }
+
+                     } else if line.isEmpty {
+                         Color.clear.frame(height: 6)
+                     } else {
+                         Text((try? AttributedString(
+                             markdown: line,
+                             options: AttributedString.MarkdownParsingOptions(
+                                 interpretedSyntax: .inlineOnlyPreservingWhitespace
+                             )
+                         )) ?? AttributedString(line))
+                             .font(.system(size: 16))
+                             .foregroundColor(AppTheme.aiBubbleText)
+                             .frame(maxWidth: .infinity, alignment: .leading)
+                     }
+                 }
+             }
+             .frame(maxWidth: .infinity, alignment: .leading)
+             .padding(.horizontal, 4)
+             .padding(.vertical, 4)
+         }
+
     }
 }
 
