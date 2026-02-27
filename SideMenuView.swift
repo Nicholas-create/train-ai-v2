@@ -10,8 +10,7 @@ import SwiftUI
 struct SideMenuView: View {
     @Binding var isOpen: Bool
     var width: CGFloat
-    @State private var apiKeyInput: String = ""
-    @State private var saveStatus: String? = nil
+    @Binding var isSettingsOpen: Bool
 
     var body: some View {
         ZStack {
@@ -45,62 +44,21 @@ struct SideMenuView: View {
                     
                     navRow(icon: "clock", label: "History") { }
                     navRow(icon: "chart.line.uptrend.xyaxis", label: "Progression") { }
-                    navRow(icon: "person.crop.circle", label: "Profile") { }
-                    
+
+                    Spacer()
+
                     // ── Separator
 
                     Divider()
-                          .padding(.horizontal, 24)
-                          .padding(.vertical, 20)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 20)
 
-                      ScrollView {
-                          VStack(alignment: .leading, spacing: 10) {
-                              Text("Anthropic API Key")
-                                  .font(.system(size: 14, weight: .semibold))
-                                  .foregroundStyle(AppTheme.secondaryText)
+                    navRow(icon: "person.crop.circle", label: "Profile") { }
 
-                              SecureField("sk-ant-...", text: $apiKeyInput)
-                                  .font(.system(size: 14))
-                                  .padding(10)
-                                  .background(
-                                      RoundedRectangle(cornerRadius: 10)
-                                          .fill(AppTheme.inputFieldBackground)
-                                  )
-                                  .onAppear {
-                                      if KeychainHelper.loadAPIKey() != nil {
-                                          apiKeyInput = ""
-                                      }
-                                  }
-
-                              Button(action: saveAPIKey) {
-                                  Text("Save Key")
-                                      .font(.system(size: 14, weight: .semibold))
-                                      .foregroundStyle(AppTheme.buttonText)
-                                      .frame(maxWidth: .infinity)
-                                      .padding(.vertical, 10)
-                                      .background(
-                                          RoundedRectangle(cornerRadius: 20)
-                                              .fill(AppTheme.buttonBackground)
-                                      )
-                              }
-
-                              if let status = saveStatus {
-                                  Text(status)
-                                      .font(.system(size: 12))
-                                      .foregroundStyle(status.hasPrefix("Saved") ? AppTheme.successText : AppTheme.errorText)
-                              }
-
-                              if KeychainHelper.loadAPIKey() != nil {
-                                  Text("Key is saved. Enter a new key to replace it.")
-                                      .font(.system(size: 11))
-                                      .foregroundStyle(AppTheme.secondaryText)
-                              }
-                          }
-                          .padding(.horizontal, 24)
-                          .padding(.bottom, 20)
-                      }
-
-                      Spacer()
+                    navRow(icon: "gearshape", label: "Settings") {
+                        withAnimation { isOpen = false }
+                        isSettingsOpen = true
+                    }
 
 
                 }
@@ -130,21 +88,9 @@ struct SideMenuView: View {
         }
     }
     
-    private func saveAPIKey() {
-        let trimmed = apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            saveStatus = "Please enter a key."
-            return
-        }
-        let success = KeychainHelper.saveAPIKey(trimmed)
-        saveStatus = success ? "Saved successfully." : "Failed to save key."
-        if success {
-            apiKeyInput = ""
-        }
-    }
 }
 
 
 #Preview {
-    SideMenuView(isOpen: .constant(true), width: 320)
+    SideMenuView(isOpen: .constant(true), width: 320, isSettingsOpen: .constant(false))
 }

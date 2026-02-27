@@ -14,6 +14,7 @@ struct ChatsListView: View {
 
     @State private var chatService = ChatService()
     @State private var isSideMenuOpen = false
+    @State private var isSettingsOpen = false
     @State private var navigateToChat = false
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
@@ -47,12 +48,15 @@ struct ChatsListView: View {
                 }
 
                 if isSideMenuOpen {
-                    SideMenuView(isOpen: $isSideMenuOpen, width: sideMenuWidth)
+                    SideMenuView(isOpen: $isSideMenuOpen, width: sideMenuWidth, isSettingsOpen: $isSettingsOpen)
                         .transition(.identity)
                         .zIndex(1)
                 }
             }
             .animation(.interactiveSpring(response: 0.2, dampingFraction: 1.0, blendDuration: 0), value: isSideMenuOpen)
+            .sheet(isPresented: $isSettingsOpen) {
+                SettingsView()
+            }
         }
     }
 

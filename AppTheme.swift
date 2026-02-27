@@ -11,7 +11,7 @@ struct AppTheme {
     // MARK: - Backgrounds
     static let background = Color("Background")
     static let backgroundGradientEnd = Color("BackgroundGradientEnd")
-    static let surface = Color.white
+    static let surface = Color("Surface")
 
     // MARK: - Accent (change this to retheme the whole app)
     static let accent = Color.accentColor
@@ -22,11 +22,11 @@ struct AppTheme {
     static let aiBubbleText = Color("AIBubbleText")
 
     // MARK: - Buttons
-    static let sendButton = Color.black
+    static let sendButton = Color("SendButtonFill")
     static let sendButtonDisabled = Color.gray
-    static let sendButtonIcon = Color.white
-    static let buttonBackground = Color.black
-    static let buttonText = Color.white
+    static let sendButtonIcon = Color("SendButtonIcon")
+    static let buttonBackground = Color("SendButtonFill")
+    static let buttonText = Color("SendButtonIcon")
 
     // MARK: - Text
     static let primaryText = Color.primary
