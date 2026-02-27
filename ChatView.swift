@@ -233,6 +233,7 @@ struct ChatView: View {
     private func sendMessage() {
         let trimmed = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        guard trimmed.count <= 4000 else { return }
         chatService.send(userText: trimmed, modelContext: modelContext)
         messageText = ""
         textEditorHeight = 40
@@ -249,7 +250,7 @@ struct ChatView: View {
 struct MessageBubble: View {
     let message: ChatMessage
 
-    private var isUser: Bool { message.role == "user" }
+    private var isUser: Bool { message.role == .user }
 
     var body: some View {
         if isUser {

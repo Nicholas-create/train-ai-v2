@@ -11,6 +11,7 @@
 
   @Observable
   final class ChatService {
+      private static let apiURL = URL(string: "https://api.anthropic.com/v1/messages")!
       var messages: [ChatMessage] = []
       var isLoading: Bool = false
       var errorMessage: String? = nil
@@ -23,7 +24,7 @@
           }
 
           errorMessage = nil
-          messages.append(ChatMessage(role: "user", content: userText))
+          messages.append(ChatMessage(role: .user, content: userText))
           isLoading = true
           saveCurrentConversation(modelContext: modelContext)
 
@@ -33,14 +34,13 @@
       }
 
       private func callAnthropicAPI(apiKey: String, modelContext: ModelContext) async {
-           let url = URL(string: "https://api.anthropic.com/v1/messages")!
-           var request = URLRequest(url: url)
+          var request = URLRequest(url: Self.apiURL)
            request.httpMethod = "POST"
            request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
            request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
            request.setValue("application/json", forHTTPHeaderField: "content-type")
 
-           let messagePayload = messages.map { ["role": $0.role, "content": $0.content] }
+           let messagePayload = messages.map { ["role": $0.role.rawValue, "content": $0.content] }
            let body: [String: Any] = [
                "model": selectedModel.rawValue,
                "max_tokens": 1024,
@@ -60,7 +60,7 @@
 
            // Add an empty placeholder message right away
            await MainActor.run {
-               messages.append(ChatMessage(role: "assistant", content: ""))
+               messages.append(ChatMessage(role: .assistant, content: ""))
            }
 
            do {
@@ -114,7 +114,7 @@
 
           // Auto-generate title from first user message
           if conversation.title == "New Chat",
-             let firstUserMessage = messages.first(where: { $0.role == "user" }) {
+            let firstUserMessage = messages.first(where: { $0.role == .user }) {
               let title = String(firstUserMessage.content.prefix(50))
               conversation.title = title
           }
@@ -127,7 +127,7 @@
           }
           conversation.messages.removeAll()
           for msg in messages {
-              let sdMessage = SDMessage(role: msg.role, content: msg.content, timestamp: msg.timestamp, conversation: conversation)
+              let sdMessage = SDMessage(role: msg.role.rawValue, content: msg.content, timestamp: msg.timestamp, conversation: conversation)
               conversation.messages.append(sdMessage)
           }
       }
@@ -136,7 +136,7 @@
           currentConversation = conversation
           messages = conversation.messages
               .sorted { $0.timestamp < $1.timestamp }
-              .map { ChatMessage(role: $0.role, content: $0.content) }
+              .map { ChatMessage(role: ChatMessage.MessageRole(rawValue: $0.role) ?? .user, content: $0.content) }
       }
 
       func startNewChat() {
