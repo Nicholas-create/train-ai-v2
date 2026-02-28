@@ -20,7 +20,17 @@ struct train_ai_v2App: App {
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            // Apply file protection to the underlying store after creation
+            container.mainContext.container.persistentStoreCoordinator.persistentStores.forEach { store in
+                if let storeURL = store.url {
+                    try? FileManager.default.setAttributes(
+                        [.protectionKey: FileProtectionType.completeUnlessOpen],
+                        ofItemAtPath: storeURL.path
+                    )
+                }
+            }
+            return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }

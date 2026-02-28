@@ -171,6 +171,11 @@ struct APIKeyView: View {
             saveStatus = "Please enter a key."
             return
         }
+        // NEW: validate Anthropic key prefix
+        guard trimmed.hasPrefix("sk-ant-") else {
+            saveStatus = "That doesn't look like an Anthropic key (should start with sk-ant-)."
+            return
+        }
         let success = KeychainHelper.saveAPIKey(trimmed)
         saveStatus = success ? "Saved successfully." : "Failed to save key."
         if success { apiKeyInput = "" }
