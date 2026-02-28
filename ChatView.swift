@@ -74,6 +74,12 @@ struct ChatView: View {
         .onAppear {
             chatService.buildSystemPrompt(profile: profiles.first, units: units)
         }
+        .onChange(of: profiles) {
+            chatService.buildSystemPrompt(profile: profiles.first, units: units)
+        }
+        .onChange(of: units) {
+            chatService.buildSystemPrompt(profile: profiles.first, units: units)
+        }
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {

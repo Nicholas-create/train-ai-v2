@@ -22,12 +22,16 @@ struct train_ai_v2App: App {
 
         do {
             let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            let container = try ModelContainer(for: schema, configurations: [config])
+            let container = try ModelContainer(
+                for: schema,
+                migrationPlan: AppMigrationPlan.self,
+                configurations: [config]
+            )
 
             // Apply file protection to the underlying store after creation.
             // SQLite creates three files: the main store, a write-ahead log (.wal),
             // and a shared-memory index (.shm). All three must be protected.
-            let storeURL = config.url
+            let storeURL = container.configurations.first?.url ?? config.url
             let companions = [
                 storeURL,
                 storeURL.appendingPathExtension("wal"),
