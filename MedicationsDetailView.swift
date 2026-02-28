@@ -19,6 +19,37 @@ private struct MedicationEntry: Identifiable, Equatable {
     }
 }
 
+// MARK: – Row subview (extracted so the parent body stays simple)
+
+private struct MedicationEntryRow: View {
+    @Binding var entry: MedicationEntry
+    let frequencies: [String]
+    @FocusState.Binding var focusedID: UUID?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField(
+                "",
+                text: $entry.nameAndDose,
+                prompt: Text("Name and dose (e.g. Metformin 500mg)")
+                    .foregroundStyle(AppTheme.secondaryText)
+            )
+            .focused($focusedID, equals: entry.id)
+            .foregroundStyle(AppTheme.primaryText)
+
+            Picker("Frequency", selection: $entry.frequency) {
+                ForEach(frequencies, id: \.self) { freq in
+                    Text(freq).tag(freq)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(AppTheme.secondaryText)
+        }
+        .padding(.vertical, 4)
+        .listRowBackground(AppTheme.card)
+    }
+}
+
 // MARK: – Main view
 
 struct MedicationsDetailView: View {
@@ -37,24 +68,11 @@ struct MedicationsDetailView: View {
         Form {
             Section {
                 ForEach(entries.indices, id: \.self) { idx in
-                    VStack(alignment: .leading, spacing: 8) {
-                        TextField(
-                            "Name and dose (e.g. Metformin 500mg)",
-                            text: $entries[idx].nameAndDose
-                        )
-                        .focused($focusedEntry, equals: entries[idx].id)
-                        .foregroundStyle(AppTheme.primaryText)
-
-                        Picker("Frequency", selection: $entries[idx].frequency) {
-                            ForEach(Self.frequencies, id: \.self) { freq in
-                                Text(freq).tag(freq)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .tint(AppTheme.secondaryText)
-                    }
-                    .padding(.vertical, 4)
-                    .listRowBackground(AppTheme.card)
+                    MedicationEntryRow(
+                        entry: $entries[idx],
+                        frequencies: Self.frequencies,
+                        focusedID: $focusedEntry
+                    )
                 }
                 .onDelete { indexSet in
                     entries.remove(atOffsets: indexSet)

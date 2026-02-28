@@ -12,23 +12,22 @@ struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("app_units") private var units: String = "metric"
     @Bindable var profile: UserProfile
-    @State private var showingHeightPicker = false
-    @State private var showingStartWeightPicker = false
-    @State private var showingCurrentWeightPicker = false
-    @State private var showingGoalWeightPicker = false
-    @State private var showingBodyFatPicker     = false
-    @State private var showingWaistPicker       = false
-    @State private var showingHipsPicker        = false
-    @State private var showingChestPicker       = false
-    @State private var showingLeftArmPicker     = false
-    @State private var showingRightArmPicker    = false
-    @State private var showingLeftThighPicker   = false
-    @State private var showingRightThighPicker  = false
-    @State private var showingDaysPerWeekPicker = false
-    @State private var showingSessionLengthPicker = false
-    @State private var showingSleepPicker = false
-    @State private var showingStressPicker = false
+    @State private var activePicker: PickerKind?
     @FocusState private var focusedField: ProfileField?
+
+    private enum PickerKind: String, Identifiable {
+        case height, startWeight, currentWeight, goalWeight, bodyFat
+        case waist, hips, chest, leftArm, rightArm, leftThigh, rightThigh
+        case daysPerWeek, sessionLength, sleep, stress
+        var id: String { rawValue }
+    }
+
+    private func pickerBinding(for kind: PickerKind) -> Binding<Bool> {
+        Binding(
+            get: { activePicker == kind },
+            set: { if $0 { activePicker = kind } else { activePicker = nil } }
+        )
+    }
 
     private enum ProfileField {
         case name, email, motivation
@@ -119,6 +118,26 @@ struct ProfileView: View {
                 trainingSection
             }
             .listStyle(.insetGrouped)
+            .sheet(item: $activePicker) { kind in
+                switch kind {
+                case .height:        heightPickerSheet
+                case .startWeight:   startWeightPickerSheet
+                case .currentWeight: currentWeightPickerSheet
+                case .goalWeight:    goalWeightPickerSheet
+                case .bodyFat:       bodyFatPickerSheet
+                case .waist:         measurementSheet("Waist",      value: profile.waistCm      ?? 80, minCm: 50,  maxCm: 150, minIn: 20, maxIn: 59, dismiss: { activePicker = nil }) { profile.waistCm      = $0 }
+                case .hips:          measurementSheet("Hips",       value: profile.hipsCm       ?? 90, minCm: 50,  maxCm: 160, minIn: 20, maxIn: 63, dismiss: { activePicker = nil }) { profile.hipsCm       = $0 }
+                case .chest:         measurementSheet("Chest",      value: profile.chestCm      ?? 95, minCm: 60,  maxCm: 160, minIn: 24, maxIn: 63, dismiss: { activePicker = nil }) { profile.chestCm      = $0 }
+                case .leftArm:       measurementSheet("Left Arm",   value: profile.leftArmCm    ?? 35, minCm: 20,  maxCm: 60,  minIn: 8,  maxIn: 24, dismiss: { activePicker = nil }) { profile.leftArmCm    = $0 }
+                case .rightArm:      measurementSheet("Right Arm",  value: profile.rightArmCm   ?? 35, minCm: 20,  maxCm: 60,  minIn: 8,  maxIn: 24, dismiss: { activePicker = nil }) { profile.rightArmCm   = $0 }
+                case .leftThigh:     measurementSheet("Left Thigh", value: profile.leftThighCm  ?? 55, minCm: 30,  maxCm: 80,  minIn: 12, maxIn: 31, dismiss: { activePicker = nil }) { profile.leftThighCm  = $0 }
+                case .rightThigh:    measurementSheet("Right Thigh",value: profile.rightThighCm ?? 55, minCm: 30,  maxCm: 80,  minIn: 12, maxIn: 31, dismiss: { activePicker = nil }) { profile.rightThighCm = $0 }
+                case .daysPerWeek:   daysPerWeekPickerSheet
+                case .sessionLength: sessionLengthPickerSheet
+                case .sleep:         sleepPickerSheet
+                case .stress:        stressPickerSheet
+                }
+            }
             .scrollContentBackground(.hidden)
             .background(AppTheme.elevated)
             .navigationTitle("Profile")
@@ -189,7 +208,7 @@ struct ProfileView: View {
     private var bodyStatsSection: some View {
         Section("Body Stats") {
             // Height
-            Button { showingHeightPicker = true } label: {
+            Button { activePicker = .height } label: {
                 HStack {
                     Text("Height").foregroundStyle(AppTheme.primaryText)
                     Spacer()
@@ -197,12 +216,9 @@ struct ProfileView: View {
                 }
             }
             .listRowBackground(AppTheme.card)
-            .sheet(isPresented: $showingHeightPicker) {
-                heightPickerSheet
-            }
 
             // Start Weight
-            Button { showingStartWeightPicker = true } label: {
+            Button { activePicker = .startWeight } label: {
                 HStack {
                     Text("Start Weight").foregroundStyle(AppTheme.primaryText)
                     Spacer()
@@ -210,12 +226,9 @@ struct ProfileView: View {
                 }
             }
             .listRowBackground(AppTheme.card)
-            .sheet(isPresented: $showingStartWeightPicker) {
-                startWeightPickerSheet
-            }
 
             // Current Weight
-            Button { showingCurrentWeightPicker = true } label: {
+            Button { activePicker = .currentWeight } label: {
                 HStack {
                     Text("Current Weight").foregroundStyle(AppTheme.primaryText)
                     Spacer()
@@ -223,12 +236,9 @@ struct ProfileView: View {
                 }
             }
             .listRowBackground(AppTheme.card)
-            .sheet(isPresented: $showingCurrentWeightPicker) {
-                currentWeightPickerSheet
-            }
 
             // Goal Weight
-            Button { showingGoalWeightPicker = true } label: {
+            Button { activePicker = .goalWeight } label: {
                 HStack {
                     Text("Goal Weight").foregroundStyle(AppTheme.primaryText)
                     Spacer()
@@ -236,9 +246,6 @@ struct ProfileView: View {
                 }
             }
             .listRowBackground(AppTheme.card)
-            .sheet(isPresented: $showingGoalWeightPicker) {
-                goalWeightPickerSheet
-            }
 
             // Date of Birth
             DatePicker(
@@ -271,7 +278,7 @@ struct ProfileView: View {
 
     private var heightPickerSheet: some View {
         VStack(spacing: 0) {
-            HStack { Spacer(); Button("Done") { showingHeightPicker = false }.fontWeight(.semibold).padding() }
+            HStack { Spacer(); Button("Done") { activePicker = nil }.fontWeight(.semibold).padding() }
             Picker("Height", selection: Binding<Int>(
                 get: { units == "imperial" ? Int((profile.heightCm ?? 170) / 2.54) : Int(profile.heightCm ?? 170) },
                 set: { profile.heightCm = units == "imperial" ? Double($0) * 2.54 : Double($0) }
@@ -289,7 +296,7 @@ struct ProfileView: View {
 
     private var startWeightPickerSheet: some View {
         VStack(spacing: 0) {
-            HStack { Spacer(); Button("Done") { showingStartWeightPicker = false }.fontWeight(.semibold).padding() }
+            HStack { Spacer(); Button("Done") { activePicker = nil }.fontWeight(.semibold).padding() }
             Picker("Start Weight", selection: Binding<Int>(
                 get: { units == "imperial" ? Int((profile.startWeightKg ?? 70) * 2.20462) : Int(profile.startWeightKg ?? 70) },
                 set: { profile.startWeightKg = units == "imperial" ? Double($0) / 2.20462 : Double($0) }
@@ -307,7 +314,7 @@ struct ProfileView: View {
 
     private var currentWeightPickerSheet: some View {
         VStack(spacing: 0) {
-            HStack { Spacer(); Button("Done") { showingCurrentWeightPicker = false }.fontWeight(.semibold).padding() }
+            HStack { Spacer(); Button("Done") { activePicker = nil }.fontWeight(.semibold).padding() }
             Picker("Current Weight", selection: Binding<Int>(
                 get: { units == "imperial" ? Int((profile.currentWeightKg ?? 70) * 2.20462) : Int(profile.currentWeightKg ?? 70) },
                 set: { profile.currentWeightKg = units == "imperial" ? Double($0) / 2.20462 : Double($0) }
@@ -325,7 +332,7 @@ struct ProfileView: View {
 
     private var goalWeightPickerSheet: some View {
         VStack(spacing: 0) {
-            HStack { Spacer(); Button("Done") { showingGoalWeightPicker = false }.fontWeight(.semibold).padding() }
+            HStack { Spacer(); Button("Done") { activePicker = nil }.fontWeight(.semibold).padding() }
             Picker("Goal Weight", selection: Binding<Int>(
                 get: { units == "imperial" ? Int((profile.goalWeightKg ?? 70) * 2.20462) : Int(profile.goalWeightKg ?? 70) },
                 set: { profile.goalWeightKg = units == "imperial" ? Double($0) / 2.20462 : Double($0) }
@@ -341,6 +348,78 @@ struct ProfileView: View {
         .presentationDetents([.height(280)])
     }
 
+    private var bodyFatPickerSheet: some View {
+        VStack(spacing: 0) {
+            HStack { Spacer(); Button("Done") { activePicker = nil }.fontWeight(.semibold).padding() }
+            Picker("Body Fat", selection: Binding<Int>(
+                get: { Int(profile.bodyFatPercent ?? 15) },
+                set: { profile.bodyFatPercent = Double($0) }
+            )) {
+                ForEach(3...50, id: \.self) { Text("\($0)%").tag($0) }
+            }
+            .pickerStyle(.wheel).padding(.bottom)
+        }
+        .presentationDetents([.height(280)])
+    }
+
+    private var daysPerWeekPickerSheet: some View {
+        VStack(spacing: 0) {
+            HStack { Spacer(); Button("Done") { activePicker = nil }.fontWeight(.semibold).padding() }
+            Picker("Days / Week", selection: Binding(
+                get: { profile.preferredDaysPerWeek ?? 3 },
+                set: { profile.preferredDaysPerWeek = $0 }
+            )) {
+                ForEach(1...7, id: \.self) { d in Text("\(d) \(d == 1 ? "day" : "days")").tag(d) }
+            }
+            .pickerStyle(.wheel).padding(.bottom)
+        }
+        .presentationDetents([.height(280)])
+    }
+
+    private var sessionLengthPickerSheet: some View {
+        VStack(spacing: 0) {
+            HStack { Spacer(); Button("Done") { activePicker = nil }.fontWeight(.semibold).padding() }
+            Picker("Session Length", selection: Binding(
+                get: { profile.preferredSessionMinutes ?? 60 },
+                set: { profile.preferredSessionMinutes = $0 }
+            )) {
+                ForEach([30, 45, 60, 90], id: \.self) { Text("\($0) min").tag($0) }
+            }
+            .pickerStyle(.wheel).padding(.bottom)
+        }
+        .presentationDetents([.height(280)])
+    }
+
+    private var sleepPickerSheet: some View {
+        VStack(spacing: 0) {
+            HStack { Spacer(); Button("Done") { activePicker = nil }.fontWeight(.semibold).padding() }
+            Picker("Sleep", selection: Binding(
+                get: { profile.sleepHoursPerNight ?? 7 },
+                set: { profile.sleepHoursPerNight = $0 }
+            )) {
+                ForEach(Array(stride(from: 3.0, through: 12.0, by: 0.5)), id: \.self) { h in
+                    Text("\(String(format: "%.1f", h))h").tag(h)
+                }
+            }
+            .pickerStyle(.wheel).padding(.bottom)
+        }
+        .presentationDetents([.height(280)])
+    }
+
+    private var stressPickerSheet: some View {
+        VStack(spacing: 0) {
+            HStack { Spacer(); Button("Done") { activePicker = nil }.fontWeight(.semibold).padding() }
+            Picker("Stress Level", selection: Binding(
+                get: { profile.stressLevel ?? 5 },
+                set: { profile.stressLevel = $0 }
+            )) {
+                ForEach(1...10, id: \.self) { Text("\($0) / 10").tag($0) }
+            }
+            .pickerStyle(.wheel).padding(.bottom)
+        }
+        .presentationDetents([.height(280)])
+    }
+
     // MARK: – Body Composition
 
     private var bodyCompositionSection: some View {
@@ -350,86 +429,51 @@ struct ProfileView: View {
                 label: "Waist",
                 value: profile.waistCm,
                 defaultCm: 80,
-                showing: $showingWaistPicker,
+                showing: pickerBinding(for: .waist),
                 assign: { profile.waistCm = $0 }
             )
-            .sheet(isPresented: $showingWaistPicker) {
-                measurementSheet("Waist", value: profile.waistCm ?? 80, minCm: 50, maxCm: 150, minIn: 20, maxIn: 59, dismiss: { showingWaistPicker = false }) {
-                    profile.waistCm = $0
-                }
-            }
             measurementRow(
                 label: "Hips",
                 value: profile.hipsCm,
                 defaultCm: 90,
-                showing: $showingHipsPicker,
+                showing: pickerBinding(for: .hips),
                 assign: { profile.hipsCm = $0 }
             )
-            .sheet(isPresented: $showingHipsPicker) {
-                measurementSheet("Hips", value: profile.hipsCm ?? 90, minCm: 50, maxCm: 160, minIn: 20, maxIn: 63, dismiss: { showingHipsPicker = false }) {
-                    profile.hipsCm = $0
-                }
-            }
             measurementRow(
                 label: "Chest",
                 value: profile.chestCm,
                 defaultCm: 95,
-                showing: $showingChestPicker,
+                showing: pickerBinding(for: .chest),
                 assign: { profile.chestCm = $0 }
             )
-            .sheet(isPresented: $showingChestPicker) {
-                measurementSheet("Chest", value: profile.chestCm ?? 95, minCm: 60, maxCm: 160, minIn: 24, maxIn: 63, dismiss: { showingChestPicker = false }) {
-                    profile.chestCm = $0
-                }
-            }
             measurementRow(
                 label: "Left Arm",
                 value: profile.leftArmCm,
                 defaultCm: 35,
-                showing: $showingLeftArmPicker,
+                showing: pickerBinding(for: .leftArm),
                 assign: { profile.leftArmCm = $0 }
             )
-            .sheet(isPresented: $showingLeftArmPicker) {
-                measurementSheet("Left Arm", value: profile.leftArmCm ?? 35, minCm: 20, maxCm: 60, minIn: 8, maxIn: 24, dismiss: { showingLeftArmPicker = false }) {
-                    profile.leftArmCm = $0
-                }
-            }
             measurementRow(
                 label: "Right Arm",
                 value: profile.rightArmCm,
                 defaultCm: 35,
-                showing: $showingRightArmPicker,
+                showing: pickerBinding(for: .rightArm),
                 assign: { profile.rightArmCm = $0 }
             )
-            .sheet(isPresented: $showingRightArmPicker) {
-                measurementSheet("Right Arm", value: profile.rightArmCm ?? 35, minCm: 20, maxCm: 60, minIn: 8, maxIn: 24, dismiss: { showingRightArmPicker = false }) {
-                    profile.rightArmCm = $0
-                }
-            }
             measurementRow(
                 label: "Left Thigh",
                 value: profile.leftThighCm,
                 defaultCm: 55,
-                showing: $showingLeftThighPicker,
+                showing: pickerBinding(for: .leftThigh),
                 assign: { profile.leftThighCm = $0 }
             )
-            .sheet(isPresented: $showingLeftThighPicker) {
-                measurementSheet("Left Thigh", value: profile.leftThighCm ?? 55, minCm: 30, maxCm: 80, minIn: 12, maxIn: 31, dismiss: { showingLeftThighPicker = false }) {
-                    profile.leftThighCm = $0
-                }
-            }
             measurementRow(
                 label: "Right Thigh",
                 value: profile.rightThighCm,
                 defaultCm: 55,
-                showing: $showingRightThighPicker,
+                showing: pickerBinding(for: .rightThigh),
                 assign: { profile.rightThighCm = $0 }
             )
-            .sheet(isPresented: $showingRightThighPicker) {
-                measurementSheet("Right Thigh", value: profile.rightThighCm ?? 55, minCm: 30, maxCm: 80, minIn: 12, maxIn: 31, dismiss: { showingRightThighPicker = false }) {
-                    profile.rightThighCm = $0
-                }
-            }
         }
     }
 
@@ -439,7 +483,7 @@ struct ProfileView: View {
             Text("Body Fat").foregroundStyle(AppTheme.primaryText)
             Spacer()
             if profile.bodyFatPercent != nil {
-                Button { showingBodyFatPicker = true } label: {
+                Button { activePicker = .bodyFat } label: {
                     Text("\(Int(profile.bodyFatPercent ?? 15))%").foregroundStyle(AppTheme.secondaryText)
                 }
                 .buttonStyle(.plain)
@@ -447,26 +491,13 @@ struct ProfileView: View {
             Toggle("", isOn: Binding(
                 get: { profile.bodyFatPercent != nil },
                 set: { on in
-                    if on { profile.bodyFatPercent = 15; showingBodyFatPicker = true }
+                    if on { profile.bodyFatPercent = 15; activePicker = .bodyFat }
                     else  { profile.bodyFatPercent = nil }
                 }
             ))
             .labelsHidden()
         }
         .listRowBackground(AppTheme.card)
-        .sheet(isPresented: $showingBodyFatPicker) {
-            VStack(spacing: 0) {
-                HStack { Spacer(); Button("Done") { showingBodyFatPicker = false }.fontWeight(.semibold).padding() }
-                Picker("Body Fat", selection: Binding<Int>(
-                    get: { Int(profile.bodyFatPercent ?? 15) },
-                    set: { profile.bodyFatPercent = Double($0) }
-                )) {
-                    ForEach(3...50, id: \.self) { Text("\($0)%").tag($0) }
-                }
-                .pickerStyle(.wheel).padding(.bottom)
-            }
-            .presentationDetents([.height(280)])
-        }
     }
 
     // Generic toggle+picker row for optional circumference measurements
@@ -644,7 +675,7 @@ struct ProfileView: View {
 
     private var lifestyleSection: some View {
         Section("Lifestyle") {
-            Button { showingSleepPicker = true } label: {
+            Button { activePicker = .sleep } label: {
                 HStack {
                     Text("Sleep").foregroundStyle(AppTheme.primaryText)
                     Spacer()
@@ -653,23 +684,8 @@ struct ProfileView: View {
                 }
             }
             .listRowBackground(AppTheme.card)
-            .sheet(isPresented: $showingSleepPicker) {
-                VStack(spacing: 0) {
-                    HStack { Spacer(); Button("Done") { showingSleepPicker = false }.fontWeight(.semibold).padding() }
-                    Picker("Sleep", selection: Binding(
-                        get: { profile.sleepHoursPerNight ?? 7 },
-                        set: { profile.sleepHoursPerNight = $0 }
-                    )) {
-                        ForEach(Array(stride(from: 3.0, through: 12.0, by: 0.5)), id: \.self) { h in
-                            Text("\(String(format: "%.1f", h))h").tag(h)
-                        }
-                    }
-                    .pickerStyle(.wheel).padding(.bottom)
-                }
-                .presentationDetents([.height(280)])
-            }
 
-            Button { showingStressPicker = true } label: {
+            Button { activePicker = .stress } label: {
                 HStack {
                     Text("Stress Level").foregroundStyle(AppTheme.primaryText)
                     Spacer()
@@ -677,19 +693,6 @@ struct ProfileView: View {
                 }
             }
             .listRowBackground(AppTheme.card)
-            .sheet(isPresented: $showingStressPicker) {
-                VStack(spacing: 0) {
-                    HStack { Spacer(); Button("Done") { showingStressPicker = false }.fontWeight(.semibold).padding() }
-                    Picker("Stress Level", selection: Binding(
-                        get: { profile.stressLevel ?? 5 },
-                        set: { profile.stressLevel = $0 }
-                    )) {
-                        ForEach(1...10, id: \.self) { Text("\($0) / 10").tag($0) }
-                    }
-                    .pickerStyle(.wheel).padding(.bottom)
-                }
-                .presentationDetents([.height(280)])
-            }
 
             TextField(
                 "Dietary Preferences (e.g. vegan, keto)",
@@ -730,7 +733,7 @@ struct ProfileView: View {
             .pickerStyle(.menu)
             .listRowBackground(AppTheme.card)
 
-            Button { showingDaysPerWeekPicker = true } label: {
+            Button { activePicker = .daysPerWeek } label: {
                 HStack {
                     Text("Days / Week").foregroundStyle(AppTheme.primaryText)
                     Spacer()
@@ -738,21 +741,8 @@ struct ProfileView: View {
                 }
             }
             .listRowBackground(AppTheme.card)
-            .sheet(isPresented: $showingDaysPerWeekPicker) {
-                VStack(spacing: 0) {
-                    HStack { Spacer(); Button("Done") { showingDaysPerWeekPicker = false }.fontWeight(.semibold).padding() }
-                    Picker("Days / Week", selection: Binding(
-                        get: { profile.preferredDaysPerWeek ?? 3 },
-                        set: { profile.preferredDaysPerWeek = $0 }
-                    )) {
-                        ForEach(1...7, id: \.self) { d in Text("\(d) \(d == 1 ? "day" : "days")").tag(d) }
-                    }
-                    .pickerStyle(.wheel).padding(.bottom)
-                }
-                .presentationDetents([.height(280)])
-            }
 
-            Button { showingSessionLengthPicker = true } label: {
+            Button { activePicker = .sessionLength } label: {
                 HStack {
                     Text("Session Length").foregroundStyle(AppTheme.primaryText)
                     Spacer()
@@ -760,19 +750,6 @@ struct ProfileView: View {
                 }
             }
             .listRowBackground(AppTheme.card)
-            .sheet(isPresented: $showingSessionLengthPicker) {
-                VStack(spacing: 0) {
-                    HStack { Spacer(); Button("Done") { showingSessionLengthPicker = false }.fontWeight(.semibold).padding() }
-                    Picker("Session Length", selection: Binding(
-                        get: { profile.preferredSessionMinutes ?? 60 },
-                        set: { profile.preferredSessionMinutes = $0 }
-                    )) {
-                        ForEach([30, 45, 60, 90], id: \.self) { Text("\($0) min").tag($0) }
-                    }
-                    .pickerStyle(.wheel).padding(.bottom)
-                }
-                .presentationDetents([.height(280)])
-            }
 
             Picker("Time of Day", selection: Binding(
                 get: { profile.preferredTimeOfDay ?? "" },
