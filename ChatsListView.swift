@@ -232,5 +232,5 @@ extension Date {
 
 #Preview {
     ChatsListView()
-        .modelContainer(for: [Conversation.self, SDMessage.self, UserProfile.self], inMemory: true)
+        .modelContainer(for: [Conversation.self, SDMessage.self, UserProfile.self, Exercise.self], inMemory: true)
 }

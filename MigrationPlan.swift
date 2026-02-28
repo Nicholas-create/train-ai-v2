@@ -38,9 +38,12 @@ enum AppSchemaV3: VersionedSchema {
 
 enum AppMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [AppSchemaV2.self, AppSchemaV3.self]
+        [AppSchemaV1.self, AppSchemaV2.self, AppSchemaV3.self]
     }
     static var stages: [MigrationStage] {
-        [.lightweight(fromVersion: AppSchemaV2.self, toVersion: AppSchemaV3.self)]
+        [
+            .lightweight(fromVersion: AppSchemaV1.self, toVersion: AppSchemaV2.self),
+            .lightweight(fromVersion: AppSchemaV2.self, toVersion: AppSchemaV3.self)
+        ]
     }
 }

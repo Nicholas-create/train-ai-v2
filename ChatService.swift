@@ -452,7 +452,7 @@ final class ChatService {
             for type in ["strength", "cardio", "mobility", "flexibility"] {
                 guard let group = grouped[type], !group.isEmpty else { continue }
                 eBlock += "**\(type.capitalized):** "
-                eBlock += group.sorted { $0.name < $1.name }.map { $0.name }.joined(separator: ", ")
+                eBlock += group.sorted { $0.name < $1.name }.map { sanitize($0.name) }.joined(separator: ", ")
                 eBlock += "\n"
             }
             block += eBlock
