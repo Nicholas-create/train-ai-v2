@@ -159,10 +159,10 @@
 
           var block = "\n\n---\n\n## User Profile\n"
 
-          if !p.name.isEmpty       { block += "- Name: \(p.name)\n" }
-          if let dob = p.dateOfBirth {
-              let age = Calendar.current.dateComponents([.year], from: dob, to: Date()).year ?? 0
-              block += "- Age: \(age)\n"
+          if !p.nickname.isEmpty     { block += "- Nickname: \(sanitize(p.nickname))\n" }
+          if let year = p.birthYear {
+              let currentYear = Calendar.current.component(.year, from: Date())
+              block += "- Age: ~\(currentYear - year)\n"
           }
           if let g = p.gender, g != "prefer_not_to_say", !g.isEmpty {
               block += "- Gender: \(g.replacingOccurrences(of: "_", with: "-"))\n"
@@ -188,7 +188,7 @@
               let f = DateFormatter(); f.dateStyle = .medium
               block += "- Goal Deadline: \(f.string(from: d))\n"
           }
-          if let note = p.motivationNote, !note.isEmpty { block += "- Motivation: \(note)\n" }
+          if let note = p.motivationNote, !note.isEmpty { block += "- Motivation: \(sanitize(note))\n" }
 
           if let lvl = p.experienceLevel, !lvl.isEmpty {
               block += "- Experience Level: \(lvl.capitalized)\n"
@@ -197,14 +197,14 @@
               block += "- Activity Level: \(act.replacingOccurrences(of: "_", with: " ").capitalized)\n"
           }
 
-          if let c = p.medicalConditions, !c.isEmpty  { block += "- Medical Conditions: \(c)\n" }
-          if let i = p.currentInjuries, !i.isEmpty    { block += "- Current Injuries: \(i)\n" }
-          if let m = p.medications, !m.isEmpty        { block += "- Medications: \(m)\n" }
+          if let c = p.medicalConditions, !c.isEmpty  { block += "- Medical Conditions: \(sanitize(c))\n" }
+          if let i = p.currentInjuries, !i.isEmpty    { block += "- Current Injuries: \(sanitize(i))\n" }
+          if let m = p.medications, !m.isEmpty        { block += "- Medications: \(sanitize(m))\n" }
 
           if let s = p.sleepHoursPerNight { block += "- Sleep: \(String(format: "%.1f", s))h/night\n" }
           if let s = p.stressLevel        { block += "- Stress Level: \(s)/10\n" }
-          if let d = p.dietaryPreferences, !d.isEmpty { block += "- Dietary Preferences: \(d)\n" }
-          if let a = p.foodAllergies, !a.isEmpty      { block += "- Food Allergies: \(a)\n" }
+          if let d = p.dietaryPreferences, !d.isEmpty { block += "- Dietary Preferences: \(sanitize(d))\n" }
+          if let a = p.foodAllergies, !a.isEmpty      { block += "- Food Allergies: \(sanitize(a))\n" }
 
           if let loc = p.trainingLocation, !loc.isEmpty   { block += "- Training Location: \(loc.capitalized)\n" }
           if let days = p.preferredDaysPerWeek            { block += "- Preferred Days/Week: \(days)\n" }
@@ -212,6 +212,14 @@
           if let t = p.preferredTimeOfDay, !t.isEmpty      { block += "- Preferred Time of Day: \(t.capitalized)\n" }
 
           systemPrompt = base + block
+      }
+
+      /// Strips newline characters from user-supplied free-text before it is
+      /// interpolated into the system prompt, preventing multi-line prompt injection.
+      private func sanitize(_ text: String) -> String {
+          text
+              .replacingOccurrences(of: "\n", with: " ")
+              .replacingOccurrences(of: "\r", with: " ")
       }
 
       private func formatWeight(_ kg: Double, units: String) -> String {

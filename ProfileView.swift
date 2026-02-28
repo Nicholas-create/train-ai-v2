@@ -18,9 +18,11 @@ struct ProfileView: View {
     private enum PickerKind: String, Identifiable {
         case height, startWeight, currentWeight, goalWeight, bodyFat
         case waist, hips, chest, leftArm, rightArm, leftThigh, rightThigh
-        case daysPerWeek, sessionLength, sleep, stress
+        case daysPerWeek, sessionLength, sleep, stress, birthYear
         var id: String { rawValue }
     }
+
+    private var currentYear: Int { Calendar.current.component(.year, from: Date()) }
 
     private func pickerBinding(for kind: PickerKind) -> Binding<Bool> {
         Binding(
@@ -30,14 +32,14 @@ struct ProfileView: View {
     }
 
     private enum ProfileField {
-        case name, email, motivation
+        case nickname, email, motivation
         case dietaryPreferences, foodAllergies
     }
 
     // MARK: – Derived text
 
     private var initials: String {
-        let words = profile.name.split(separator: " ")
+        let words = profile.nickname.split(separator: " ")
         return words.prefix(2).compactMap { $0.first.map(String.init) }.joined()
     }
 
@@ -136,6 +138,7 @@ struct ProfileView: View {
                 case .sessionLength: sessionLengthPickerSheet
                 case .sleep:         sleepPickerSheet
                 case .stress:        stressPickerSheet
+                case .birthYear:     birthYearPickerSheet
                 }
             }
             .scrollContentBackground(.hidden)
@@ -174,7 +177,7 @@ struct ProfileView: View {
                         .font(.system(size: 28, weight: .semibold))
                         .foregroundStyle(.white)
                 }
-                Text(profile.name.isEmpty ? "Your Name" : profile.name)
+                Text(profile.nickname.isEmpty ? "Your Nickname" : profile.nickname)
                     .font(.headline)
                     .foregroundStyle(AppTheme.primaryText)
                 Text(profile.email.isEmpty ? "email@example.com" : profile.email)
@@ -192,8 +195,8 @@ struct ProfileView: View {
 
     private var identitySection: some View {
         Section("Identity") {
-            TextField("Name", text: $profile.name)
-                .focused($focusedField, equals: .name)
+            TextField("Nickname", text: $profile.nickname)
+                .focused($focusedField, equals: .nickname)
                 .listRowBackground(AppTheme.card)
             TextField("Email", text: $profile.email)
                 .keyboardType(.emailAddress)
@@ -247,16 +250,15 @@ struct ProfileView: View {
             }
             .listRowBackground(AppTheme.card)
 
-            // Date of Birth
-            DatePicker(
-                "Date of Birth",
-                selection: Binding(
-                    get: { profile.dateOfBirth ?? Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date() },
-                    set: { profile.dateOfBirth = $0 }
-                ),
-                displayedComponents: .date
-            )
-            .datePickerStyle(.compact)
+            // Birth Year
+            Button { activePicker = .birthYear } label: {
+                HStack {
+                    Text("Birth Year").foregroundStyle(AppTheme.primaryText)
+                    Spacer()
+                    Text(profile.birthYear.map(String.init) ?? "Not set")
+                        .foregroundStyle(AppTheme.secondaryText)
+                }
+            }
             .listRowBackground(AppTheme.card)
 
             // Gender
@@ -414,6 +416,22 @@ struct ProfileView: View {
                 set: { profile.stressLevel = $0 }
             )) {
                 ForEach(1...10, id: \.self) { Text("\($0) / 10").tag($0) }
+            }
+            .pickerStyle(.wheel).padding(.bottom)
+        }
+        .presentationDetents([.height(280)])
+    }
+
+    private var birthYearPickerSheet: some View {
+        VStack(spacing: 0) {
+            HStack { Spacer(); Button("Done") { activePicker = nil }.fontWeight(.semibold).padding() }
+            Picker("Birth Year", selection: Binding(
+                get: { profile.birthYear ?? (currentYear - 25) },
+                set: { profile.birthYear = $0 }
+            )) {
+                ForEach((currentYear - 100)...(currentYear - 10), id: \.self) { year in
+                    Text(String(year)).tag(year)
+                }
             }
             .pickerStyle(.wheel).padding(.bottom)
         }
@@ -771,7 +789,7 @@ struct ProfileView: View {
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: UserProfile.self, configurations: config)
-    let sample = UserProfile(name: "Nick Sampson", email: "nick@example.com")
+    let sample = UserProfile(nickname: "Nick", email: "nick@example.com")
     let _ = {
         sample.primaryGoal = "build_muscle"
         sample.currentWeightKg = 82.5

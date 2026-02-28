@@ -9,7 +9,7 @@ import SwiftData
 @Model
 final class UserProfile {
     // Identity
-    var name: String
+    @Attribute(originalName: "name") var nickname: String
     var email: String
     var profilePhotoURL: String?
     var memberSince: Date
@@ -19,7 +19,7 @@ final class UserProfile {
     var startWeightKg: Double?
     var currentWeightKg: Double?
     var goalWeightKg: Double?
-    var dateOfBirth: Date?
+    var birthYear: Int?
     var gender: String?           // "male" | "female" | "non-binary" | "prefer_not_to_say"
 
     // Body Composition
@@ -56,9 +56,9 @@ final class UserProfile {
     var preferredSessionMinutes: Int?  // 30 | 45 | 60 | 90
     var preferredTimeOfDay: String?    // "morning" | "afternoon" | "evening"
 
-    init(name: String = "", email: String = "",
+    init(nickname: String = "", email: String = "",
          profilePhotoURL: String? = nil, memberSince: Date = Date()) {
-        self.name = name
+        self.nickname = nickname
         self.email = email
         self.profilePhotoURL = profilePhotoURL
         self.memberSince = memberSince

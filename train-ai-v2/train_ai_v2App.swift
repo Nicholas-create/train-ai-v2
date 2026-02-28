@@ -10,25 +10,28 @@ import SwiftData
 
 @main
 struct train_ai_v2App: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-              Conversation.self,
-              SDMessage.self,
-              UserProfile.self,
-          ])
+    let sharedModelContainer: ModelContainer
+    @State private var showStoreAlert: Bool
 
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+    init() {
+        let schema = Schema([
+            Conversation.self,
+            SDMessage.self,
+            UserProfile.self,
+        ])
 
         do {
-            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+            let container = try ModelContainer(for: schema, configurations: [config])
+
             // Apply file protection to the underlying store after creation.
             // SQLite creates three files: the main store, a write-ahead log (.wal),
             // and a shared-memory index (.shm). All three must be protected.
-            let storeURL = modelConfiguration.url
+            let storeURL = config.url
             let companions = [
                 storeURL,
                 storeURL.appendingPathExtension("wal"),
-                storeURL.appendingPathExtension("shm")
+                storeURL.appendingPathExtension("shm"),
             ]
             for fileURL in companions {
                 guard FileManager.default.fileExists(atPath: fileURL.path) else { continue }
@@ -43,15 +46,32 @@ struct train_ai_v2App: App {
                     #endif
                 }
             }
-            return container
+
+            self.sharedModelContainer = container
+            self._showStoreAlert = State(initialValue: false)
+
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            // Persistent store failed — fall back to an in-memory store so the
+            // app remains usable, then surface an alert so the user knows their
+            // data won't be saved this session.
+            #if DEBUG
+            print("[Store] Persistent store failed, falling back to in-memory: \(error)")
+            #endif
+            let fallbackConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            // In-memory creation has no disk I/O and cannot realistically fail.
+            self.sharedModelContainer = try! ModelContainer(for: schema, configurations: [fallbackConfig])
+            self._showStoreAlert = State(initialValue: true)
         }
-    }()
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .alert("Storage Unavailable", isPresented: $showStoreAlert) {
+                    Button("OK", role: .cancel) {}
+                } message: {
+                    Text("Your data couldn't be saved to disk this session. Try restarting the app.")
+                }
         }
         .modelContainer(sharedModelContainer)
     }
