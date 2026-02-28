@@ -12,6 +12,8 @@
 		3AD6F9F22F525EBD006F6C92 /* MedicalConditionsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6F9F12F525EBD006F6C92 /* MedicalConditionsDetailView.swift */; };
 		3AD6F9F42F525ECD006F6C92 /* CurrentInjuriesDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6F9F32F525ECD006F6C92 /* CurrentInjuriesDetailView.swift */; };
 		3AD6F9F62F526443006F6C92 /* MedicationsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6F9F52F526443006F6C92 /* MedicationsDetailView.swift */; };
+		3AD6FA042F52F054006F6C92 /* SystemPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6FA032F52F054006F6C92 /* SystemPrompt.swift */; };
+		3AD6FA062F52FF1A006F6C92 /* MigrationPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD6FA052F52FF1A006F6C92 /* MigrationPlan.swift */; };
 		3AE32DAA2F4EEC4800D0BFE3 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE32DA92F4EEC4800D0BFE3 /* ChatView.swift */; };
 		3AE32DAC2F4EEC5000D0BFE3 /* SideMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE32DAB2F4EEC5000D0BFE3 /* SideMenuView.swift */; };
 		3AEB34E72F50F3EB00B43B55 /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AEB34E62F50F3E700B43B55 /* Conversation.swift */; };
@@ -48,6 +50,8 @@
 		3AD6F9F12F525EBD006F6C92 /* MedicalConditionsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicalConditionsDetailView.swift; sourceTree = "<group>"; };
 		3AD6F9F32F525ECD006F6C92 /* CurrentInjuriesDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentInjuriesDetailView.swift; sourceTree = "<group>"; };
 		3AD6F9F52F526443006F6C92 /* MedicationsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationsDetailView.swift; sourceTree = "<group>"; };
+		3AD6FA032F52F054006F6C92 /* SystemPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPrompt.swift; sourceTree = "<group>"; };
+		3AD6FA052F52FF1A006F6C92 /* MigrationPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationPlan.swift; sourceTree = "<group>"; };
 		3AE32D532F4E538F00D0BFE3 /* train-ai-v2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "train-ai-v2.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AE32D622F4E539100D0BFE3 /* train-ai-v2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "train-ai-v2Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AE32D6C2F4E539100D0BFE3 /* train-ai-v2UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "train-ai-v2UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -127,6 +131,8 @@
 				BB11111100000000BB000005 /* AppTheme.swift */,
 				3AD6F9ED2F52397E006F6C92 /* UserProfile.swift */,
 				3AD6F9EF2F5239DC006F6C92 /* ProfileView.swift */,
+				3AD6FA032F52F054006F6C92 /* SystemPrompt.swift */,
+				3AD6FA052F52FF1A006F6C92 /* MigrationPlan.swift */,
 				3AD6F9F12F525EBD006F6C92 /* MedicalConditionsDetailView.swift */,
 				3AD6F9F32F525ECD006F6C92 /* CurrentInjuriesDetailView.swift */,
 				3AD6F9F52F526443006F6C92 /* MedicationsDetailView.swift */,
@@ -294,6 +300,7 @@
 				AA11111100000000AA000001 /* AIModel.swift in Sources */,
 				AA11111100000000AA000002 /* ChatMessage.swift in Sources */,
 				3AEB34E72F50F3EB00B43B55 /* Conversation.swift in Sources */,
+				3AD6FA062F52FF1A006F6C92 /* MigrationPlan.swift in Sources */,
 				AA11111100000000AA000003 /* KeychainHelper.swift in Sources */,
 				3AD6F9F02F5239DC006F6C92 /* ProfileView.swift in Sources */,
 				3AEB34E92F50F58000B43B55 /* ChatsListView.swift in Sources */,
@@ -303,6 +310,7 @@
 				3AD6F9F42F525ECD006F6C92 /* CurrentInjuriesDetailView.swift in Sources */,
 				AA11111100000000AA000005 /* AppTheme.swift in Sources */,
 				3AEB34F12F51F1ED00B43B55 /* SettingsView.swift in Sources */,
+				3AD6FA042F52F054006F6C92 /* SystemPrompt.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

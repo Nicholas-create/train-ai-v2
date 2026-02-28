@@ -15,6 +15,8 @@ struct ChatView: View {
     @State private var containerWidth: CGFloat = 390
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query private var profiles: [UserProfile]
+    @AppStorage("app_units") private var units: String = "metric"
 
     var body: some View {
         ZStack {
@@ -68,6 +70,15 @@ struct ChatView: View {
         }
         .onTapGesture {
             hideKeyboard()
+        }
+        .onAppear {
+            chatService.buildSystemPrompt(profile: profiles.first, units: units)
+        }
+        .onChange(of: profiles) {
+            chatService.buildSystemPrompt(profile: profiles.first, units: units)
+        }
+        .onChange(of: units) {
+            chatService.buildSystemPrompt(profile: profiles.first, units: units)
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
