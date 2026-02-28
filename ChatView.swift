@@ -258,6 +258,7 @@ struct ChatView: View {
 enum MessageSegment {
     case text([String])
     case table([[String]])
+    case codeBlock(language: String?, [String])
 }
 
 func parseCells(_ line: String) -> [String] {
@@ -279,6 +280,9 @@ func parseSegments(_ content: String) -> [MessageSegment] {
     var segments: [MessageSegment] = []
     var textBuffer: [String] = []
     var tableBuffer: [String] = []
+    var codeBuffer: [String] = []
+    var inCodeBlock = false
+    var codeLanguage: String? = nil
 
     func flushText() {
         if !textBuffer.isEmpty {
@@ -301,6 +305,30 @@ func parseSegments(_ content: String) -> [MessageSegment] {
     }
 
     for line in lines {
+        if line.hasPrefix("```") {
+            if inCodeBlock {
+                // closing fence — flush code buffer as a codeBlock segment
+                flushText()
+                segments.append(.codeBlock(language: codeLanguage, codeBuffer))
+                codeBuffer = []
+                codeLanguage = nil
+                inCodeBlock = false
+            } else {
+                // opening fence — flush any pending text/table, start collecting
+                flushText()
+                flushTable()
+                let tag = String(line.dropFirst(3)).trimmingCharacters(in: .whitespaces)
+                codeLanguage = tag.isEmpty ? nil : tag
+                inCodeBlock = true
+            }
+            continue
+        }
+
+        if inCodeBlock {
+            codeBuffer.append(line)
+            continue
+        }
+
         if line.trimmingCharacters(in: .whitespaces).hasPrefix("|") {
             flushText()
             tableBuffer.append(line)
@@ -308,6 +336,11 @@ func parseSegments(_ content: String) -> [MessageSegment] {
             flushTable()
             textBuffer.append(line)
         }
+    }
+
+    // Handle unclosed code block
+    if inCodeBlock && !codeBuffer.isEmpty {
+        segments.append(.codeBlock(language: codeLanguage, codeBuffer))
     }
     flushText()
     flushTable()
@@ -383,37 +416,110 @@ struct MessageBubble: View {
                     case .text(let lines):
                         VStack(alignment: .leading, spacing: 2) {
                             ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                                if line.hasPrefix("### ") {
-                                    Text(line.dropFirst(4))
+                                let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+                                let leadingSpaces = line.prefix(while: { $0 == " " }).count
+                                let indentLevel = leadingSpaces / 2
+                                if line.hasPrefix("###### ") {
+                                    let headingText = String(line.dropFirst(7))
+                                    let attrHeading = (try? AttributedString(
+                                        markdown: headingText,
+                                        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+                                    )) ?? AttributedString(headingText)
+                                    Text(attrHeading)
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(AppTheme.aiBubbleText)
+                                } else if line.hasPrefix("##### ") {
+                                    let headingText = String(line.dropFirst(6))
+                                    let attrHeading = (try? AttributedString(
+                                        markdown: headingText,
+                                        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+                                    )) ?? AttributedString(headingText)
+                                    Text(attrHeading)
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(AppTheme.aiBubbleText)
+                                } else if line.hasPrefix("#### ") {
+                                    let headingText = String(line.dropFirst(5))
+                                    let attrHeading = (try? AttributedString(
+                                        markdown: headingText,
+                                        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+                                    )) ?? AttributedString(headingText)
+                                    Text(attrHeading)
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundColor(AppTheme.aiBubbleText)
+                                } else if line.hasPrefix("### ") {
+                                    let headingText = String(line.dropFirst(4))
+                                    let attrHeading = (try? AttributedString(
+                                        markdown: headingText,
+                                        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+                                    )) ?? AttributedString(headingText)
+                                    Text(attrHeading)
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(AppTheme.aiBubbleText)
                                 } else if line.hasPrefix("## ") {
-                                    Text(line.dropFirst(3))
+                                    let headingText = String(line.dropFirst(3))
+                                    let attrHeading = (try? AttributedString(
+                                        markdown: headingText,
+                                        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+                                    )) ?? AttributedString(headingText)
+                                    Text(attrHeading)
                                         .font(.system(size: 18, weight: .bold))
                                         .foregroundColor(AppTheme.aiBubbleText)
                                 } else if line.hasPrefix("# ") {
-                                    Text(line.dropFirst(2))
+                                    let headingText = String(line.dropFirst(2))
+                                    let attrHeading = (try? AttributedString(
+                                        markdown: headingText,
+                                        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+                                    )) ?? AttributedString(headingText)
+                                    Text(attrHeading)
                                         .font(.system(size: 22, weight: .bold))
                                         .foregroundColor(AppTheme.aiBubbleText)
                                 } else if line.trimmingCharacters(in: .whitespaces) == "---" {
                                     Divider()
                                         .padding(.vertical, 4)
-                                } else if line.hasPrefix("- ") || line.hasPrefix("* ") || line.hasPrefix("+ ") {
+                                } else if line.hasPrefix("> ") {
+                                    let quoteContent = String(line.dropFirst(2))
+                                    HStack(alignment: .top, spacing: 0) {
+                                        Rectangle()
+                                            .fill(Color.secondary.opacity(0.5))
+                                            .frame(width: 3)
+                                        Text((try? AttributedString(
+                                            markdown: quoteContent,
+                                            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+                                        )) ?? AttributedString(quoteContent))
+                                            .font(.system(size: 15))
+                                            .italic()
+                                            .foregroundColor(AppTheme.aiBubbleText.opacity(0.8))
+                                            .padding(.leading, 10)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .padding(.vertical, 2)
+                                } else if trimmedLine.hasPrefix("- ") || trimmedLine.hasPrefix("* ") || trimmedLine.hasPrefix("+ ") {
+                                    let rawContent = String(trimmedLine.dropFirst(2))
+                                    let displayContent = {
+                                        if rawContent.lowercased().hasPrefix("[x] ") {
+                                            return "✅ " + String(rawContent.dropFirst(4))
+                                        } else if rawContent.hasPrefix("[ ] ") {
+                                            return "☐ " + String(rawContent.dropFirst(4))
+                                        } else {
+                                            return rawContent
+                                        }
+                                    }()
                                     HStack(alignment: .top, spacing: 8) {
                                         Text("•")
-                                            .font(.system(size: 16))
+                                            .font(.system(size: indentLevel == 0 ? 16 : 13))
                                             .foregroundColor(AppTheme.aiBubbleText)
                                             .padding(.top, 1)
                                         Text((try? AttributedString(
-                                            markdown: String(line.dropFirst(2)),
+                                            markdown: displayContent,
                                             options: AttributedString.MarkdownParsingOptions(
                                                 interpretedSyntax: .inlineOnlyPreservingWhitespace
                                             )
-                                        )) ?? AttributedString(String(line.dropFirst(2))))
+                                        )) ?? AttributedString(displayContent))
                                             .font(.system(size: 16))
                                             .foregroundColor(AppTheme.aiBubbleText)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                     }
+                                    .padding(.leading, CGFloat(indentLevel) * 16)
                                 } else if line.first?.isNumber == true,
                                           let dotSpaceRange = line.range(of: ". "),
                                           line[line.startIndex..<dotSpaceRange.lowerBound].allSatisfy({ $0.isNumber }) {
@@ -452,6 +558,27 @@ struct MessageBubble: View {
                     case .table(let rows):
                         MarkdownTableView(rows: rows)
                             .padding(.vertical, 4)
+                    case .codeBlock(let language, let lines):
+                        VStack(alignment: .leading, spacing: 0) {
+                            if let lang = language {
+                                Text(lang)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 12)
+                                    .padding(.top, 8)
+                            }
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                Text(lines.joined(separator: "\n"))
+                                    .font(.system(size: 13, design: .monospaced))
+                                    .foregroundColor(AppTheme.aiBubbleText)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, language == nil ? 10 : 6)
+                                    .padding(.bottom, 10)
+                            }
+                        }
+                        .background(Color(.systemGray5).opacity(0.6))
+                        .cornerRadius(8)
+                        .padding(.vertical, 4)
                     }
                 }
             }
