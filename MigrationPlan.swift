@@ -26,11 +26,24 @@ enum AppSchemaV2: VersionedSchema {
     }
 }
 
+/// V3 = Exercise model added to the schema.
+enum AppSchemaV3: VersionedSchema {
+    static var versionIdentifier = Schema.Version(3, 0, 0)
+    static var models: [any PersistentModel.Type] {
+        [Conversation.self, SDMessage.self, UserProfile.self, Exercise.self]
+    }
+}
+
 // MARK: - Migration plan
 
 enum AppMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [AppSchemaV1.self, AppSchemaV2.self] }
+    static var schemas: [any VersionedSchema.Type] {
+        [AppSchemaV1.self, AppSchemaV2.self, AppSchemaV3.self]
+    }
     static var stages: [MigrationStage] {
-        [.lightweight(fromVersion: AppSchemaV1.self, toVersion: AppSchemaV2.self)]
+        [
+            .lightweight(fromVersion: AppSchemaV1.self, toVersion: AppSchemaV2.self),
+            .lightweight(fromVersion: AppSchemaV2.self, toVersion: AppSchemaV3.self)
+        ]
     }
 }
