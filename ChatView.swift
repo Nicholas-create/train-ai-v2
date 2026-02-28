@@ -256,6 +256,106 @@ struct ChatView: View {
     }
 }
 
+// MARK: - Table Parsing Helpers
+
+enum MessageSegment {
+    case text([String])
+    case table([[String]])
+}
+
+func parseCells(_ line: String) -> [String] {
+    var trimmed = line.trimmingCharacters(in: .whitespaces)
+    if trimmed.hasPrefix("|") { trimmed = String(trimmed.dropFirst()) }
+    if trimmed.hasSuffix("|") { trimmed = String(trimmed.dropLast()) }
+    return trimmed.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
+}
+
+func isSeparatorRow(_ cells: [String]) -> Bool {
+    cells.allSatisfy { cell in
+        let stripped = cell.trimmingCharacters(in: CharacterSet(charactersIn: ":-"))
+        return stripped.allSatisfy { $0 == "-" } && !cell.isEmpty
+    }
+}
+
+func parseSegments(_ content: String) -> [MessageSegment] {
+    let lines = content.components(separatedBy: "\n")
+    var segments: [MessageSegment] = []
+    var textBuffer: [String] = []
+    var tableBuffer: [String] = []
+
+    func flushText() {
+        if !textBuffer.isEmpty {
+            segments.append(.text(textBuffer))
+            textBuffer = []
+        }
+    }
+    func flushTable() {
+        if !tableBuffer.isEmpty {
+            let rows = tableBuffer.compactMap { line -> [String]? in
+                let cells = parseCells(line)
+                return cells.isEmpty ? nil : cells
+            }
+            let dataRows = rows.filter { !isSeparatorRow($0) }
+            if !dataRows.isEmpty {
+                segments.append(.table(dataRows))
+            }
+            tableBuffer = []
+        }
+    }
+
+    for line in lines {
+        if line.trimmingCharacters(in: .whitespaces).hasPrefix("|") {
+            flushText()
+            tableBuffer.append(line)
+        } else {
+            flushTable()
+            textBuffer.append(line)
+        }
+    }
+    flushText()
+    flushTable()
+    return segments
+}
+
+// MARK: - MarkdownTableView
+
+struct MarkdownTableView: View {
+    let rows: [[String]]
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            tableGrid
+        }
+    }
+
+    private var tableGrid: some View {
+        let colCount = rows.map(\.count).max() ?? 1
+
+        return Grid(alignment: .topLeading, horizontalSpacing: 20, verticalSpacing: 0) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { rowIndex, row in
+                GridRow {
+                    ForEach(0..<colCount, id: \.self) { colIndex in
+                        let cell = colIndex < row.count ? row[colIndex] : ""
+                        Text(cell.isEmpty ? " " : cell)
+                            .font(rowIndex == 0
+                                  ? .system(size: 15, weight: .bold)
+                                  : .system(size: 15))
+                            .foregroundColor(AppTheme.aiBubbleText)
+                            .multilineTextAlignment(.leading)
+                            .padding(.vertical, 9)
+                            .frame(minWidth: 60, alignment: .leading)
+                    }
+                }
+                if rowIndex < rows.count - 1 {
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.1))
+                        .frame(height: 0.5)
+                }
+            }
+        }
+    }
+}
+
 // MARK: - MessageBubble
 
 struct MessageBubble: View {
@@ -279,83 +379,89 @@ struct MessageBubble: View {
                     )
             }
         } else {
-             VStack(alignment: .leading, spacing: 2) {
-                 ForEach(Array(message.content.components(separatedBy: "\n").enumerated()), id: \.offset) { index, line in
-                     if line.hasPrefix("### ") {
-                         Text(line.dropFirst(4))
-                             .font(.system(size: 16, weight: .bold))
-                             .foregroundColor(AppTheme.aiBubbleText)
-                     } else if line.hasPrefix("## ") {
-                         Text(line.dropFirst(3))
-                             .font(.system(size: 18, weight: .bold))
-                             .foregroundColor(AppTheme.aiBubbleText)
-                     } else if line.hasPrefix("# ") {
-                         Text(line.dropFirst(2))
-                             .font(.system(size: 22, weight: .bold))
-                             .foregroundColor(AppTheme.aiBubbleText)
-                     } else if line.trimmingCharacters(in: .whitespaces) == "---" {
-                         Divider()
-                             .padding(.vertical, 4)
-
-                     // ── NEW: unordered bullet points ──────────────────────────
-                     } else if line.hasPrefix("- ") || line.hasPrefix("* ") || line.hasPrefix("+ ") {
-                         HStack(alignment: .top, spacing: 8) {
-                             Text("•")
-                                 .font(.system(size: 16))
-                                 .foregroundColor(AppTheme.aiBubbleText)
-                                 .padding(.top, 1)
-                             Text((try? AttributedString(
-                                 markdown: String(line.dropFirst(2)),
-                                 options: AttributedString.MarkdownParsingOptions(
-                                     interpretedSyntax: .inlineOnlyPreservingWhitespace
-                                 )
-                             )) ?? AttributedString(String(line.dropFirst(2))))
-                                 .font(.system(size: 16))
-                                 .foregroundColor(AppTheme.aiBubbleText)
-                                 .frame(maxWidth: .infinity, alignment: .leading)
-                         }
-
-                     // ── NEW: numbered list items ───────────────────────────────
-                     } else if line.first?.isNumber == true,
-                               let dotSpaceRange = line.range(of: ". "),
-                               line[line.startIndex..<dotSpaceRange.lowerBound].allSatisfy({ $0.isNumber }) {
-                         let number = String(line[line.startIndex..<dotSpaceRange.lowerBound]) + "."
-                         let content = String(line[dotSpaceRange.upperBound...])
-                         HStack(alignment: .top, spacing: 6) {
-                             Text(number)
-                                 .font(.system(size: 16, weight: .medium))
-                                 .foregroundColor(AppTheme.aiBubbleText)
-                                 .padding(.top, 1)
-                             Text((try? AttributedString(
-                                 markdown: content,
-                                 options: AttributedString.MarkdownParsingOptions(
-                                     interpretedSyntax: .inlineOnlyPreservingWhitespace
-                                 )
-                             )) ?? AttributedString(content))
-                                 .font(.system(size: 16))
-                                 .foregroundColor(AppTheme.aiBubbleText)
-                                 .frame(maxWidth: .infinity, alignment: .leading)
-                         }
-
-                     } else if line.isEmpty {
-                         Color.clear.frame(height: 6)
-                     } else {
-                         Text((try? AttributedString(
-                             markdown: line,
-                             options: AttributedString.MarkdownParsingOptions(
-                                 interpretedSyntax: .inlineOnlyPreservingWhitespace
-                             )
-                         )) ?? AttributedString(line))
-                             .font(.system(size: 16))
-                             .foregroundColor(AppTheme.aiBubbleText)
-                             .frame(maxWidth: .infinity, alignment: .leading)
-                     }
-                 }
-             }
-             .frame(maxWidth: .infinity, alignment: .leading)
-             .padding(.horizontal, 4)
-             .padding(.vertical, 4)
-         }
+            let segments = parseSegments(message.content)
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
+                    switch segment {
+                    case .text(let lines):
+                        VStack(alignment: .leading, spacing: 2) {
+                            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                                if line.hasPrefix("### ") {
+                                    Text(line.dropFirst(4))
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(AppTheme.aiBubbleText)
+                                } else if line.hasPrefix("## ") {
+                                    Text(line.dropFirst(3))
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundColor(AppTheme.aiBubbleText)
+                                } else if line.hasPrefix("# ") {
+                                    Text(line.dropFirst(2))
+                                        .font(.system(size: 22, weight: .bold))
+                                        .foregroundColor(AppTheme.aiBubbleText)
+                                } else if line.trimmingCharacters(in: .whitespaces) == "---" {
+                                    Divider()
+                                        .padding(.vertical, 4)
+                                } else if line.hasPrefix("- ") || line.hasPrefix("* ") || line.hasPrefix("+ ") {
+                                    HStack(alignment: .top, spacing: 8) {
+                                        Text("•")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(AppTheme.aiBubbleText)
+                                            .padding(.top, 1)
+                                        Text((try? AttributedString(
+                                            markdown: String(line.dropFirst(2)),
+                                            options: AttributedString.MarkdownParsingOptions(
+                                                interpretedSyntax: .inlineOnlyPreservingWhitespace
+                                            )
+                                        )) ?? AttributedString(String(line.dropFirst(2))))
+                                            .font(.system(size: 16))
+                                            .foregroundColor(AppTheme.aiBubbleText)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                } else if line.first?.isNumber == true,
+                                          let dotSpaceRange = line.range(of: ". "),
+                                          line[line.startIndex..<dotSpaceRange.lowerBound].allSatisfy({ $0.isNumber }) {
+                                    let number = String(line[line.startIndex..<dotSpaceRange.lowerBound]) + "."
+                                    let content = String(line[dotSpaceRange.upperBound...])
+                                    HStack(alignment: .top, spacing: 6) {
+                                        Text(number)
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(AppTheme.aiBubbleText)
+                                            .padding(.top, 1)
+                                        Text((try? AttributedString(
+                                            markdown: content,
+                                            options: AttributedString.MarkdownParsingOptions(
+                                                interpretedSyntax: .inlineOnlyPreservingWhitespace
+                                            )
+                                        )) ?? AttributedString(content))
+                                            .font(.system(size: 16))
+                                            .foregroundColor(AppTheme.aiBubbleText)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                } else if line.isEmpty {
+                                    Color.clear.frame(height: 6)
+                                } else {
+                                    Text((try? AttributedString(
+                                        markdown: line,
+                                        options: AttributedString.MarkdownParsingOptions(
+                                            interpretedSyntax: .inlineOnlyPreservingWhitespace
+                                        )
+                                    )) ?? AttributedString(line))
+                                        .font(.system(size: 16))
+                                        .foregroundColor(AppTheme.aiBubbleText)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                        }
+                    case .table(let rows):
+                        MarkdownTableView(rows: rows)
+                            .padding(.vertical, 4)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 4)
+        }
 
     }
 }
