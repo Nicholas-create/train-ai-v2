@@ -74,9 +74,6 @@ struct ChatView: View {
         .onAppear {
             chatService.buildSystemPrompt(profile: profiles.first, units: units)
         }
-        .onChange(of: profiles) {
-            chatService.buildSystemPrompt(profile: profiles.first, units: units)
-        }
         .onChange(of: units) {
             chatService.buildSystemPrompt(profile: profiles.first, units: units)
         }
@@ -245,7 +242,7 @@ struct ChatView: View {
         let trimmed = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         guard trimmed.count <= 4000 else { return }
-        chatService.send(userText: trimmed, modelContext: modelContext)
+        chatService.send(userText: trimmed, modelContext: modelContext, profile: profiles.first, units: units)
         messageText = ""
         textEditorHeight = 40
         hideKeyboard()

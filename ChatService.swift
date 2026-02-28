@@ -18,7 +18,9 @@
       var currentConversation: Conversation?
     var systemPrompt: String = ""
 
-      func send(userText: String, modelContext: ModelContext) {
+      func send(userText: String, modelContext: ModelContext, profile: UserProfile?, units: String) {
+          buildSystemPrompt(profile: profile, units: units)
+
           guard let apiKey = KeychainHelper.loadAPIKey(), !apiKey.isEmpty else {
               errorMessage = "No API key found. Add your Anthropic key in the side menu."
               return
@@ -223,14 +225,14 @@
       }
 
       private func formatWeight(_ kg: Double, units: String) -> String {
-          units == "imperial" ? "\(Int(kg * 2.20462)) lbs" : "\(Int(kg)) kg"
+          units == "imperial" ? "\(Int((kg * 2.20462).rounded())) lbs" : "\(Int(kg.rounded())) kg"
       }
 
       private func formatHeight(_ cm: Double, units: String) -> String {
           if units == "imperial" {
-              let inches = Int(cm / 2.54)
+              let inches = Int((cm / 2.54).rounded())
               return "\(inches / 12)'\(inches % 12)\""
           }
-          return "\(Int(cm)) cm"
+          return "\(Int(cm.rounded())) cm"
       }
   }
