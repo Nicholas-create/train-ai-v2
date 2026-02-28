@@ -21,13 +21,29 @@ struct train_ai_v2App: App {
 
         do {
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            // Apply file protection to the underlying store after creation
+            // Apply file protection to the underlying store after creation.
+            // SQLite creates three files: the main store, a write-ahead log (.wal),
+            // and a shared-memory index (.shm). All three must be protected.
             container.mainContext.container.persistentStoreCoordinator.persistentStores.forEach { store in
                 if let storeURL = store.url {
-                    try? FileManager.default.setAttributes(
-                        [.protectionKey: FileProtectionType.completeUnlessOpen],
-                        ofItemAtPath: storeURL.path
-                    )
+                    let companions = [
+                        storeURL,
+                        storeURL.appendingPathExtension("wal"),
+                        storeURL.appendingPathExtension("shm")
+                    ]
+                    for fileURL in companions {
+                        guard FileManager.default.fileExists(atPath: fileURL.path) else { continue }
+                        do {
+                            try FileManager.default.setAttributes(
+                                [.protectionKey: FileProtectionType.completeUnlessOpen],
+                                ofItemAtPath: fileURL.path
+                            )
+                        } catch {
+                            #if DEBUG
+                            print("[Security] File protection failed for \(fileURL.lastPathComponent): \(error)")
+                            #endif
+                        }
+                    }
                 }
             }
             return container

@@ -1,5 +1,6 @@
   ## Temporary Override                                     
   Claude may edit files directly when explicitly asked for large refactors.
+  Claude may edit files directly when explicitly asked for code review requests
 
 # Teaching Mode
 
