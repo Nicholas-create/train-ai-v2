@@ -16,6 +16,7 @@ struct ChatView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var profiles: [UserProfile]
+    @Query private var exercises: [Exercise]
     @AppStorage("app_units") private var units: String = "metric"
 
     var body: some View {
@@ -72,10 +73,10 @@ struct ChatView: View {
             hideKeyboard()
         }
         .onAppear {
-            chatService.buildSystemPrompt(profile: profiles.first, units: units)
+            chatService.buildSystemPrompt(profile: profiles.first, units: units, exercises: exercises)
         }
         .onChange(of: units) {
-            chatService.buildSystemPrompt(profile: profiles.first, units: units)
+            chatService.buildSystemPrompt(profile: profiles.first, units: units, exercises: exercises)
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -242,7 +243,7 @@ struct ChatView: View {
         let trimmed = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         guard trimmed.count <= 4000 else { return }
-        chatService.send(userText: trimmed, modelContext: modelContext, profile: profiles.first, units: units)
+        chatService.send(userText: trimmed, modelContext: modelContext, profile: profiles.first, units: units, exercises: exercises)
         messageText = ""
         textEditorHeight = 40
         hideKeyboard()

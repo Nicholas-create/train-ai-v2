@@ -12,6 +12,7 @@ struct SideMenuView: View {
     var width: CGFloat
     @Binding var isSettingsOpen: Bool
     @Binding var isProfileOpen: Bool
+    @Binding var isExerciseLibraryOpen: Bool
 
     var body: some View {
         ZStack {
@@ -38,9 +39,15 @@ struct SideMenuView: View {
                     navRow(icon: "sparkle.text.clipboard", label: "Workout Program") {
                         withAnimation { isOpen = false }
                     }
-                    
+
+                    navRow(icon: "dumbbell", label: "Exercise Library") {
+                        withAnimation { isOpen = false }
+                        isExerciseLibraryOpen = true
+                    }
+
                     navRow(icon: "bubble.left.and.bubble.right", label: "Chats") {
                         withAnimation { isOpen = false }
+                        isExerciseLibraryOpen = false
                     }
                     
                     navRow(icon: "clock", label: "History") { }
@@ -97,5 +104,7 @@ struct SideMenuView: View {
 
 #Preview {
     SideMenuView(isOpen: .constant(true), width: 320,
-                 isSettingsOpen: .constant(false), isProfileOpen: .constant(false))
+                 isSettingsOpen: .constant(false),
+                 isProfileOpen: .constant(false),
+                 isExerciseLibraryOpen: .constant(false))
 }

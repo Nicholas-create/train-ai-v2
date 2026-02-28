@@ -16,6 +16,7 @@ struct ChatsListView: View {
     @State private var isSideMenuOpen = false
     @State private var isSettingsOpen = false
     @State private var isProfileOpen = false
+    @State private var isExerciseLibraryOpen = false
     @Query private var profiles: [UserProfile]
     @State private var navigateToChat = false
     @State private var searchText = ""
@@ -50,10 +51,15 @@ struct ChatsListView: View {
                 }
 
                 if isSideMenuOpen {
-                    SideMenuView(isOpen: $isSideMenuOpen, width: sideMenuWidth,
-                                 isSettingsOpen: $isSettingsOpen, isProfileOpen: $isProfileOpen)
-                        .transition(.identity)
-                        .zIndex(1)
+                    SideMenuView(
+                        isOpen: $isSideMenuOpen,
+                        width: sideMenuWidth,
+                        isSettingsOpen: $isSettingsOpen,
+                        isProfileOpen: $isProfileOpen,
+                        isExerciseLibraryOpen: $isExerciseLibraryOpen
+                    )
+                    .transition(.identity)
+                    .zIndex(1)
                 }
             }
             .animation(.interactiveSpring(response: 0.2, dampingFraction: 1.0, blendDuration: 0), value: isSideMenuOpen)
@@ -193,6 +199,12 @@ struct ChatsListView: View {
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
             .navigationDestination(isPresented: $navigateToChat) {
                 ChatView(chatService: chatService)
+            }
+            .navigationDestination(isPresented: $isExerciseLibraryOpen) {
+                ExerciseLibraryView(isSideMenuOpen: $isSideMenuOpen, isOpen: $isExerciseLibraryOpen)
+            }
+            .onAppear {
+                ExerciseSeeder.seedIfNeeded(modelContext: modelContext)
             }
         }
     }

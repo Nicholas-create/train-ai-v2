@@ -18,6 +18,7 @@ struct train_ai_v2App: App {
             Conversation.self,
             SDMessage.self,
             UserProfile.self,
+            Exercise.self,
         ])
 
         do {
