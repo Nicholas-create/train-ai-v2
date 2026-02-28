@@ -18,7 +18,9 @@
       var currentConversation: Conversation?
     var systemPrompt: String = ""
 
-      func send(userText: String, modelContext: ModelContext) {
+      func send(userText: String, modelContext: ModelContext, profile: UserProfile?, units: String) {
+          buildSystemPrompt(profile: profile, units: units)
+
           guard let apiKey = KeychainHelper.loadAPIKey(), !apiKey.isEmpty else {
               errorMessage = "No API key found. Add your Anthropic key in the side menu."
               return

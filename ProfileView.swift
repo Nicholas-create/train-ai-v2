@@ -90,19 +90,19 @@ struct ProfileView: View {
     // MARK: – Unit helpers (display only; values always stored in metric)
 
     private func displayWeight(_ kg: Double) -> String {
-        units == "imperial" ? "\(Int(kg * 2.20462)) lbs" : "\(Int(kg)) kg"
+        units == "imperial" ? "\(Int((kg * 2.20462).rounded())) lbs" : "\(Int(kg.rounded())) kg"
     }
 
     private func displayLength(_ cm: Double) -> String {
-        units == "imperial" ? "\(String(format: "%.1f", cm / 2.54)) in" : "\(Int(cm)) cm"
+        units == "imperial" ? "\(String(format: "%.1f", cm / 2.54)) in" : "\(Int(cm.rounded())) cm"
     }
 
     private func displayHeight(_ cm: Double) -> String {
         if units == "imperial" {
-            let t = Int(cm / 2.54)
+            let t = Int((cm / 2.54).rounded())
             return "\(t / 12)'\(t % 12)\""
         }
-        return "\(Int(cm)) cm"
+        return "\(Int(cm.rounded())) cm"
     }
 
     // MARK: – Body
@@ -599,16 +599,27 @@ struct ProfileView: View {
                 .listRowBackground(AppTheme.card)
             }
 
-            DatePicker(
-                "Deadline",
-                selection: Binding(
-                    get: { profile.goalDeadline ?? Date() },
-                    set: { profile.goalDeadline = $0 }
-                ),
-                displayedComponents: .date
-            )
-            .datePickerStyle(.compact)
-            .listRowBackground(AppTheme.card)
+            if profile.primaryGoal != nil {
+                HStack {
+                    DatePicker(
+                        "Deadline",
+                        selection: Binding(
+                            get: { profile.goalDeadline ?? Date() },
+                            set: { profile.goalDeadline = $0 }
+                        ),
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.compact)
+                    if profile.goalDeadline != nil {
+                        Button { profile.goalDeadline = nil } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .listRowBackground(AppTheme.card)
+            }
 
             TextField(
                 "Why do you want this?",
