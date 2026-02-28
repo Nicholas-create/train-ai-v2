@@ -52,7 +52,7 @@
                request.httpBody = try JSONSerialization.data(withJSONObject: body)
            } catch {
                await MainActor.run {
-                   errorMessage = "Failed to encode request: \(error.localizedDescription)"
+                   errorMessage = "Failed to prepare message. Please try again."
                    isLoading = false
                }
                return
@@ -96,7 +96,7 @@
                }
            } catch {
                await MainActor.run {
-                   errorMessage = "Network error: \(error.localizedDescription)"
+                   errorMessage = "Connection error. Check your internet and try again."
                    isLoading = false
                }
            }
