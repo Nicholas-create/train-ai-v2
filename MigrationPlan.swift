@@ -18,9 +18,19 @@ enum AppSchemaV1: VersionedSchema {
     }
 }
 
+/// V2 = profilePhotoURL removed from UserProfile. Lightweight migration drops the column.
+enum AppSchemaV2: VersionedSchema {
+    static var versionIdentifier = Schema.Version(2, 0, 0)
+    static var models: [any PersistentModel.Type] {
+        [Conversation.self, SDMessage.self, UserProfile.self]
+    }
+}
+
 // MARK: - Migration plan
 
 enum AppMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [AppSchemaV1.self] }
-    static var stages: [MigrationStage] { [] }   // no migrations needed yet
+    static var schemas: [any VersionedSchema.Type] { [AppSchemaV1.self, AppSchemaV2.self] }
+    static var stages: [MigrationStage] {
+        [.lightweight(fromVersion: AppSchemaV1.self, toVersion: AppSchemaV2.self)]
+    }
 }
